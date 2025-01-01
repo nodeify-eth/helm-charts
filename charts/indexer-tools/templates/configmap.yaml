@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "indexer-tools.fullname" . }}-server
+  labels: {{- include "indexer-tools.labels" . | nindent 4 }}
+data:
+  server.js: |
+    const express = require('express');
+    const history = require('connect-history-api-fallback');
+    const serveStatic = require('serve-static');
+    const { createProxyMiddleware } = require('http-proxy-middleware');
+    const path = require('path');
+    
+    const app = express();
+    
+    app.use('/agent', createProxyMiddleware({
+      target: process.env.AGENT_SERVICE,
+      changeOrigin: true,
+      pathRewrite: {
+        '^/agent': '/'
+      },
+      onProxyRes: (proxyRes, req, res) => {
+        proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+      }
+    }));
+    
+    app.use(history());
+    app.use(serveStatic(path.join(__dirname, 'dist')));
+    
+    const port = process.env.PORT || 3000;
+    app.listen(port);

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: indexer-tools
+description: A Helm chart for Indexer Tools frontend application
+type: application
+version: 1.0.0
+appVersion: "v3.4.0-beta5"
