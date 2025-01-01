@@ -23,7 +23,7 @@ env:
     - name: GRAPH_API_KEY
       value: "<api-key>" # Will override the [api-key] default value below
     - name: DEFAULT_ACCOUNTS
-      value: '[ { "address": "0x550c1f4814a85aa10f5f061ca8c45e2ee9620226", "name": "exerimental", "active": true, "chain": "arbitrum-one", "agentConnect": true, "agentEndpoint": "/agent", "poiQuery": false, "poiQueryEndpoint": "" } ]'
+      value: '[ { "address": "0x.............", "name": "my-indexer-name", "active": true, "chain": "arbitrum-one", "agentConnect": true, "agentEndpoint": "/agent", "poiQuery": false, "poiQueryEndpoint": "" } ]'
     - name: DEFAULT_QOS_SUBGRAPH
       value: "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/Dtr9rETvwokot4BSXaD5tECanXfqfJKcvHuaaEgPDD2D"
     - name: DEFAULT_SUBGRAPH_MAINNET
