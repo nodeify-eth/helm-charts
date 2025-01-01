@@ -3,12 +3,12 @@ entries:
   indexer-tools:
   - apiVersion: v2
     appVersion: v3.4.0-beta5
-    created: "2024-12-31T17:43:37.548914-08:00"
+    created: "2025-01-01T15:19:11.724898-08:00"
     description: A Helm chart for Indexer Tools frontend application
-    digest: 3d3735729a4c274b95cced07cddccce272bdc815dd62079591d303506b0ebd27
+    digest: 43e107747278627e89c0a80f24ec8903db42dd82b157dfe34b8e31b9478602b5
     name: indexer-tools
     type: application
     urls:
-    - indexer-tools-1.0.0.tgz
+    - https://nodeify-eth.github.io/helm-charts/charts/indexer-tools-1.0.0.tgz
     version: 1.0.0
-generated: "2024-12-31T17:43:37.548502-08:00"
+generated: "2025-01-01T15:19:11.724423-08:00"
