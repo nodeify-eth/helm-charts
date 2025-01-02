@@ -1,4 +1,4 @@
-name: Deploy New Helm Chart to gh-pages
+name: Deploy Helm Charts
 
 on:
   push:
@@ -10,72 +10,45 @@ on:
 jobs:
   deploy-chart:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Main Branch
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      - name: Checkout Main Branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - name: Install Helm
-      run: |
-        curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-    - name: Identify Newly Added Charts
-      id: find-new-charts
-      run: |
-        NEW_CHARTS=$(git diff --name-status HEAD^ HEAD | grep "^A" | grep "Chart.yaml" | awk '{print $2}' | xargs -n1 dirname)
-        if [[ -z "$NEW_CHARTS" ]]; then
-          echo "No new charts detected."
-          exit 0
-        fi
-        echo "::set-output name=new_charts::$NEW_CHARTS"
-      shell: bash
+      - name: Identify and Package New Charts
+        id: package-charts
+        run: |
+          NEW_CHARTS=$(git diff --name-status HEAD^ HEAD | grep "^A" | grep "Chart.yaml" | awk '{print $2}' | xargs -n1 dirname)
+          if [[ -z "$NEW_CHARTS" ]]; then
+            echo "No new charts detected."
+            exit 0
+          fi
+          
+          mkdir -p packaged-charts
+          for chart in $NEW_CHARTS; do
+            helm package "$chart" --destination packaged-charts
+          done
+          
+          echo "new_charts=$NEW_CHARTS" >> $GITHUB_OUTPUT
 
-    - name: Debug Find New Charts
-      run: |
-        echo "Found new charts: $CHARTS"
-      env:
-        CHARTS: ${{ steps.find-new-charts.outputs.new_charts }}
-
-    - name: Package New Helm Charts
-      if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
-      run: |
-        echo "Packaging charts: ${{ steps.find-new-charts.outputs.new_charts }}"
-        mkdir -p packaged-charts
-        for chart in ${{ steps.find-new-charts.outputs.new_charts }}; do
-          echo "Packaging chart: $chart"
-          helm package $chart --destination packaged-charts
-        done
-
-    - name: Checkout gh-pages Branch
-      if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
-      uses: actions/checkout@v3
-      with:
-        ref: gh-pages
-
-    - name: Copy Packaged Charts
-      if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
-      run: |
-        mkdir -p charts
-        if ls ../packaged-charts/*.tgz 1> /dev/null 2>&1; then
-          mv ../packaged-charts/*.tgz charts/
-        else
-          echo "No packaged charts found to move."
-        fi
-
-    - name: Update Helm Repo Index
-      if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
-      run: |
-        helm repo index charts --url https://nodeify-eth.github.io/helm-charts/charts/
-
-    - name: Commit and Push Changes
-      if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git add charts
-        git commit -m "Add new Helm chart(s) and update index"
-        git push
+      - name: Deploy to gh-pages
+        if: steps.package-charts.outputs.new_charts != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git checkout gh-pages
+          mkdir -p charts
+          mv packaged-charts/*.tgz charts/ 2>/dev/null || echo "No packaged charts to move"
+          
+          helm repo index charts --url https://nodeify-eth.github.io/helm-charts/charts/
+          
+          git add charts
+          git commit -m "Add new Helm chart(s) and update index"
+          git push
