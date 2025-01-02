@@ -26,13 +26,14 @@ jobs:
       run: |
         # Find directories with changes
         CHANGED_CHARTS=$(git diff --name-only HEAD^ HEAD | grep -oE '^.+/Chart.yaml' | xargs -n1 dirname | sort -u)
-        echo "changed_charts=$CHANGED_CHARTS" >> $GITHUB_ENV
+        echo "::set-output name=changed_charts::$CHANGED_CHARTS"
+      shell: bash
 
     - name: Package Modified Helm Charts
-      if: env.changed_charts != ""
+      if: steps.find-charts.outputs.changed_charts != ''
       run: |
         mkdir -p packaged-charts
-        for chart in $changed_charts; do
+        for chart in ${{ steps.find-charts.outputs.changed_charts }}; do
           helm package $chart --destination packaged-charts
         done
 
@@ -42,18 +43,18 @@ jobs:
         ref: gh-pages  # Check out the gh-pages branch
 
     - name: Copy Packaged Charts
-      if: env.changed_charts != ""
+      if: steps.find-charts.outputs.changed_charts != ''
       run: |
         mkdir -p charts
         mv ../packaged-charts/*.tgz charts/
 
     - name: Update Helm Repo Index
-      if: env.changed_charts != ""
+      if: steps.find-charts.outputs.changed_charts != ''
       run: |
         helm repo index charts --url https://nodeify-eth.github.io/helm-charts/charts/
 
     - name: Commit and Push Changes
-      if: env.changed_charts != ""
+      if: steps.find-charts.outputs.changed_charts != ''
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
