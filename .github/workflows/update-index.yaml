@@ -1,54 +1,27 @@
-name: Deploy Helm Charts
+name: Release Charts
 
 on:
   push:
     branches:
       - main
-    paths:
-      - "**/Chart.yaml"
 
 jobs:
-  deploy-chart:
+  release:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Main Branch
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install Helm
-        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
-      - name: Identify and Package New Charts
-        id: package-charts
+      - name: Configure Git
         run: |
-          NEW_CHARTS=$(git diff --name-status HEAD^ HEAD | grep "^A" | grep "Chart.yaml" | awk '{print $2}' | xargs -n1 dirname)
-          if [[ -z "$NEW_CHARTS" ]]; then
-            echo "No new charts detected."
-            exit 0
-          fi
-          
-          mkdir -p packaged-charts
-          for chart in $NEW_CHARTS; do
-            helm package "$chart" --destination packaged-charts
-          done
-          
-          echo "new_charts=$NEW_CHARTS" >> $GITHUB_OUTPUT
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - name: Deploy to gh-pages
-        if: steps.package-charts.outputs.new_charts != ''
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          git checkout gh-pages
-          mkdir -p charts
-          mv packaged-charts/*.tgz charts/ 2>/dev/null || echo "No packaged charts to move"
-          
-          helm repo index charts --url https://nodeify-eth.github.io/helm-charts/charts/
-          
-          git add charts
-          git commit -m "Add new Helm chart(s) and update index"
-          git push
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
