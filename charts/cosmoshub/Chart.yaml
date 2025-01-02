@@ -8,10 +8,9 @@ maintainers:
   - name: vince
     email: vince@nodeify.net
 keywords:
-  - cosmos
+  - cosmoshub
   - blockchain
   - rpc
-  - cosmos-hub
   - gaia
 home: https://nodeify.net
 sources:
