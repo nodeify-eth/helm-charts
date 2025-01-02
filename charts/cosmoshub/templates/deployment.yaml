@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cosmoshub.fullname" . }}
+  labels:
+    {{- include "cosmoshub.labels" . | nindent 4 }}
+  annotations:
+    checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "cosmoshub.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "cosmoshub.selectorLabels" . | nindent 8 }}
+      annotations:
+        {{- if .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "cosmoshub.fullname" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+      terminationGracePeriodSeconds: 60
+      initContainers:
+        - name: init
+          image: "alpine:latest"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /scripts/init.sh
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: data
+              mountPath: /root/.gaia
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}@sha256:{{ .Values.image.hash }}"
+          imagePullPolicy: IfNotPresent
+          command:
+            - gaiad
+            - start
+            - --minimum-gas-prices=0.001uatom
+            - --grpc.address=0.0.0.0:9090
+            - --log_format=json
+            - --rpc.laddr=tcp://0.0.0.0:26657
+          {{- range $flag := .Values.flags }}
+          - {{ $flag }}
+          {{- end }}
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - "apk add --no-cache curl"
+          volumeMounts:
+            - name: data
+              mountPath: /root/.gaia
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+          ports:
+            - name: lcd
+              containerPort: 1317
+            - name: rpc
+              containerPort: {{ include "cosmoshub.rpc" . }}
+              protocol: TCP
+            - name: p2p
+              containerPort: {{ include "cosmoshub.p2p" . }}
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ include "cosmoshub.grpc" . }}
+              protocol: TCP
+          startupProbe:
+            failureThreshold: 600
+            periodSeconds: 30
+            timeoutSeconds: 10
+            exec:
+              command:
+                - /scripts/probe.sh
+          livenessProbe:
+            timeoutSeconds: 10
+            periodSeconds: 30
+            exec:
+              command:
+                - /scripts/probe.sh
+          readinessProbe:
+            timeoutSeconds: 10
+            httpGet:
+              path: /status
+              port: rpc
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ include "cosmoshub.fullname" . }}-scripts
+            defaultMode: 0777
+        - name: data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "cosmoshub.fullname" . }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

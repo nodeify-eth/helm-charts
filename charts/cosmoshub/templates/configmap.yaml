@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cosmoshub.fullname" . }}-scripts
+  labels:
+    {{- include "cosmoshub.labels" . | nindent 4 }}
+data:
+  probe.sh: |
+    #!/bin/sh
+    set -euo pipefail
+    
+    FILE=/root/.gaia/.probe_last_height
+    STATUS=$(curl -s --fail -m 20 http://localhost:26657/status) || { echo "Curl failed"; exit 1; }
+    
+    CATCHING_UP=$(echo "$STATUS" | jq -r '.result.sync_info.catching_up')
+    CURRENT_HEIGHT=$(echo "$STATUS" | jq -r '.result.sync_info.latest_block_height')
+    
+    if [ ! -f "$FILE" ]; then
+      echo "First run, writing height: $CURRENT_HEIGHT"
+      echo "$CURRENT_HEIGHT" > "$FILE"
+      exit 1
+    fi
+    
+    LAST_HEIGHT=$(cat "$FILE")
+    echo "Previous height: $LAST_HEIGHT, Current height: $CURRENT_HEIGHT"
+    
+    if [ "$CURRENT_HEIGHT" -le "$LAST_HEIGHT" ]; then
+      echo "Block height not increasing"
+      exit 1
+    fi
+    
+    if [ "$CATCHING_UP" = "true" ]; then
+      echo "Node still catching up"
+      echo "$CURRENT_HEIGHT" > "$FILE"
+      exit 1
+    fi
+    
+    echo "Node is synced and progressing"
+    echo "$CURRENT_HEIGHT" > "$FILE"
+    exit 0
+
+  init.sh: |
+     #!/bin/sh
+     
+     set -euo pipefail
+  
+     mkdir -p /root/.gaia/config /root/.gaia/data
+  
+     {{- if eq .Values.net "testnet" }}
+     GENESIS_URL="https://snapshots.polkachu.com/testnet-genesis/cosmos/genesis.json"
+     ADDRBOOK_URL="https://snapshots.polkachu.com/testnet-addrbook/cosmos/addrbook.json"
+     {{- else }}
+     GENESIS_URL="https://snapshots.polkachu.com/genesis/cosmos/genesis.json"
+     ADDRBOOK_URL="https://snapshots.polkachu.com/addrbook/cosmos/addrbook.json"
+     {{- end }}
+  
+     # Pull genesis if not present
+     [ -f "/root/.gaia/config/genesis.json" ] || wget -O /root/.gaia/config/genesis.json $GENESIS_URL
+  
+     # Update addrbook
+     wget -O /root/.gaia/config/addrbook.json $ADDRBOOK_URL || true
+  
+     # Exit if data exists
+     [ -f "/root/.gaia/data/priv_validator_state.json" ] && { rm -f /root/.gaia/*.lz4; exit 0; }
+  
+     {{- if .Values.snapshot.enabled }}
+     # Install required packages
+     apk add --no-cache aria2 lz4 curl jq
+  
+     # Download and extract snapshot
+     cd /root/.gaia
+     eval "SNAPSHOT_URL={{ .Values.snapshot.url }}"
+     aria2c -c -x10 "$SNAPSHOT_URL"
+     lz4 -c -d "$(basename "$SNAPSHOT_URL")" | tar xf -
+     rm -f *.lz4
+     {{- end }}
