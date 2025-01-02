@@ -2,7 +2,7 @@ apiVersion: v2
 name: cosmoshub
 description: A Helm chart for deploying a Cosmoshub node
 type: application
-version: 0.1.0
+version: 1.0.0
 appVersion: "v21.0.0"
 maintainers:
   - name: Your Name
