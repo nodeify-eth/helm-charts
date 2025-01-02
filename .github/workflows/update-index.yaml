@@ -3,9 +3,9 @@ name: Deploy New Helm Chart to gh-pages
 on:
   push:
     branches:
-      - main  # Trigger only on pushes to the main branch
+      - main
     paths:
-      - "**/Chart.yaml"  # Trigger only when a Chart.yaml file is added
+      - "**/Chart.yaml"
 
 jobs:
   deploy-chart:
@@ -15,7 +15,7 @@ jobs:
     - name: Checkout Main Branch
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0  # Ensure full commit history is available
+        fetch-depth: 0
 
     - name: Install Helm
       run: |
@@ -24,7 +24,6 @@ jobs:
     - name: Identify Newly Added Charts
       id: find-new-charts
       run: |
-        # Find newly added Chart.yaml files
         NEW_CHARTS=$(git diff --name-status HEAD^ HEAD | grep "^A" | grep "Chart.yaml" | awk '{print $2}' | xargs -n1 dirname)
         if [[ -z "$NEW_CHARTS" ]]; then
           echo "No new charts detected."
@@ -33,16 +32,16 @@ jobs:
         echo "::set-output name=new_charts::$NEW_CHARTS"
       shell: bash
 
-    - name: Debug New Charts
-      run: |
-        echo "New Charts: ${{ steps.find-new-charts.outputs.new_charts }}"
-      shell: bash
+    - name: Debug Find New Charts
+      run: echo "Found new charts: ${{ steps.find-new-charts.outputs.new_charts }}"
 
     - name: Package New Helm Charts
       if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
       run: |
+        echo "Packaging charts: ${{ steps.find-new-charts.outputs.new_charts }}"
         mkdir -p packaged-charts
         for chart in ${{ steps.find-new-charts.outputs.new_charts }}; do
+          echo "Packaging chart: $chart"
           helm package $chart --destination packaged-charts
         done
 
@@ -50,13 +49,17 @@ jobs:
       if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
       uses: actions/checkout@v3
       with:
-        ref: gh-pages  # Check out the gh-pages branch
+        ref: gh-pages
 
     - name: Copy Packaged Charts
       if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
       run: |
         mkdir -p charts
-        mv ../packaged-charts/*.tgz charts/
+        if ls ../packaged-charts/*.tgz 1> /dev/null 2>&1; then
+          mv ../packaged-charts/*.tgz charts/
+        else
+          echo "No packaged charts found to move."
+        fi
 
     - name: Update Helm Repo Index
       if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
