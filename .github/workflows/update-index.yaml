@@ -34,8 +34,9 @@ jobs:
       shell: bash
 
     - name: Debug New Charts
-      if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
-      run: echo "New Charts: ${{ steps.find-new-charts.outputs.new_charts }}"
+      run: |
+        echo "New Charts: ${{ steps.find-new-charts.outputs.new_charts }}"
+      shell: bash
 
     - name: Package New Helm Charts
       if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
