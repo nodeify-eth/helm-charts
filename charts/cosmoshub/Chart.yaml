@@ -3,10 +3,10 @@ name: cosmoshub
 description: A Helm chart for deploying a Cosmoshub node
 type: application
 version: 1.0.0
-appVersion: "v21.0.0"
+appVersion: v21.0.0
 maintainers:
-  - name: Your Name
-    email: your.email@example.com
+  - name: vince
+    email: vince@nodeify.net
 keywords:
   - cosmos
   - blockchain

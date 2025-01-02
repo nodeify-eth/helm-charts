@@ -10,7 +10,7 @@ A Helm chart for deploying a Cosmoshub node
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| Your Name | vince@nodeify.net |  |
+| vince | <vince@nodeify.net> |  |
 
 ## Source Code
 
