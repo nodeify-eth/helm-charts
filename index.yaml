@@ -1,5 +1,27 @@
 apiVersion: v1
 entries:
+  cosmoshub:
+  - apiVersion: v2
+    appVersion: v21.0.0
+    created: "2025-01-02T12:15:40.980488191Z"
+    description: A Helm chart for deploying a Cosmoshub node
+    digest: d542706122405c883c87534958f103cb6a6b002eb2c59d82b89cff8be7946d3f
+    home: https://github.com/cosmos/gaia
+    keywords:
+    - cosmos
+    - blockchain
+    - cosmos-hub
+    - gaia
+    maintainers:
+    - email: vince@nodeify.net
+      name: vince
+    name: cosmoshub
+    sources:
+    - https://github.com/cosmos/gaia
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/cosmoshub-1.0.0/cosmoshub-1.0.0.tgz
+    version: 1.0.0
   indexer-tools:
   - apiVersion: v2
     appVersion: v3.4.0-beta5
@@ -11,4 +33,4 @@ entries:
     urls:
     - https://nodeify-eth.github.io/helm-charts/charts/indexer-tools-1.0.0.tgz
     version: 1.0.0
-generated: "2025-01-01T15:19:11.724423-08:00"
+generated: "2025-01-02T12:15:41.11589089Z"
