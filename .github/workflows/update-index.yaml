@@ -25,3 +25,55 @@ jobs:
         uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Checkout gh-pages Branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Generate index.html with Styling
+        run: |
+          echo '<!DOCTYPE html>' > index.html
+          echo '<html>' >> index.html
+          echo '<head>' >> index.html
+          echo '    <title>Nodeify Helm Charts</title>' >> index.html
+          echo '    <style>' >> index.html
+          echo '        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 40px; background: #000; color: #fff; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }' >> index.html
+          echo '        .container { max-width: 800px; width: 100%; text-align: center; }' >> index.html
+          echo '        h1 { font-size: 3em; margin-bottom: 0.5em; letter-spacing: -1px; }' >> index.html
+          echo '        .description { font-size: 1.2em; color: #888; margin-bottom: 2em; }' >> index.html
+          echo '        pre { background: #111; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 1.1em; margin: 2em 0; }' >> index.html
+          echo '        code { color: #fff; }' >> index.html
+          echo '        .charts { margin: 3em 0; padding: 2em; background: #111; border-radius: 8px; text-align: left; }' >> index.html
+          echo '        .charts h2 { margin-top: 0; color: #fff; }' >> index.html
+          echo '        .chart-item { margin: 1em 0; padding: 1em; border: 1px solid #333; border-radius: 4px; }' >> index.html
+          echo '        .chart-name { font-weight: bold; color: #fff; }' >> index.html
+          echo '        .chart-description { color: #888; margin-top: 0.5em; }' >> index.html
+          echo '        footer { margin-top: 3em; color: #666; font-size: 0.9em; }' >> index.html
+          echo '    </style>' >> index.html
+          echo '</head>' >> index.html
+          echo '<body>' >> index.html
+          echo '    <div class="container">' >> index.html
+          echo '        <h1>Nodeify Helm Charts</h1>' >> index.html
+          echo '        <p class="description">Official Helm repository for Nodeify\'s blockchain tools and services</p>' >> index.html
+          echo '        <pre><code>helm repo add nodeify https://nodeify-eth.github.io/helm-charts' >> index.html
+          echo 'helm repo update' >> index.html
+          echo 'helm install &lt;chart-name&gt; nodeify/&lt;chart-name&gt;</code></pre>' >> index.html
+          echo '        <div class="charts">' >> index.html
+          echo '            <h2>Available Charts</h2>' >> index.html
+          yq -r '.entries | to_entries[] | "<div class=\"chart-item\"><div class=\"chart-name\">\(.key)</div><div class=\"chart-description\">\(.value[0].description // "No description provided.")</div></div>"' index.yaml >> index.html
+          echo '        </div>' >> index.html
+          echo '        <footer>' >> index.html
+          echo '            <p>Maintained by Nodeify | <a href="https://github.com/nodeify-eth/helm-charts" style="color: #666;">GitHub Repository</a></p>' >> index.html
+          echo '        </footer>' >> index.html
+          echo '    </div>' >> index.html
+          echo '</body>' >> index.html
+          echo '</html>' >> index.html
+
+      - name: Commit and Push Changes
+        run: |
+          git add index.html index.yaml
+          git commit -m "Update index.html and index.yaml with latest charts"
+          git push
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
