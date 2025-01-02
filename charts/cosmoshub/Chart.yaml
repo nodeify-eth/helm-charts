@@ -10,8 +10,9 @@ maintainers:
 keywords:
   - cosmos
   - blockchain
+  - rpc
   - cosmos-hub
   - gaia
-home: https://github.com/cosmos/gaia
+home: https://nodeify.net
 sources:
   - https://github.com/cosmos/gaia
