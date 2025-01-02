@@ -1,0 +1,17 @@
+apiVersion: v2
+name: cosmoshub
+description: A Helm chart for deploying a Cosmoshub node
+type: application
+version: 0.1.0
+appVersion: "v21.0.0"
+maintainers:
+  - name: Your Name
+    email: your.email@example.com
+keywords:
+  - cosmos
+  - blockchain
+  - cosmos-hub
+  - gaia
+home: https://github.com/cosmos/gaia
+sources:
+  - https://github.com/cosmos/gaia
