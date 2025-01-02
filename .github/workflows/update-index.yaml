@@ -33,7 +33,10 @@ jobs:
       shell: bash
 
     - name: Debug Find New Charts
-      run: echo "Found new charts: ${{ steps.find-new-charts.outputs.new_charts }}"
+      run: |
+        echo "Found new charts: $CHARTS"
+      env:
+        CHARTS: ${{ steps.find-new-charts.outputs.new_charts }}
 
     - name: Package New Helm Charts
       if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
