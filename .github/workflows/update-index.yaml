@@ -3,9 +3,9 @@ name: Deploy New Helm Chart to gh-pages
 on:
   push:
     branches:
-      - main  # Trigger on pushes to the main branch
+      - main  # Trigger only on pushes to the main branch
     paths:
-      - "**/Chart.yaml"  # Trigger only if a Chart.yaml file is added
+      - "**/Chart.yaml"  # Trigger only when a Chart.yaml file is added
 
 jobs:
   deploy-chart:
@@ -15,7 +15,7 @@ jobs:
     - name: Checkout Main Branch
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0  # Fetch entire history to detect additions
+        fetch-depth: 0  # Ensure full commit history is available
 
     - name: Install Helm
       run: |
@@ -24,39 +24,46 @@ jobs:
     - name: Identify Newly Added Charts
       id: find-new-charts
       run: |
-        # Find directories with newly added Chart.yaml
+        # Find newly added Chart.yaml files
         NEW_CHARTS=$(git diff --name-status HEAD^ HEAD | grep "^A" | grep "Chart.yaml" | awk '{print $2}' | xargs -n1 dirname)
-        echo "new_charts=$NEW_CHARTS" >> $GITHUB_ENV
+        if [[ -z "$NEW_CHARTS" ]]; then
+          echo "No new charts detected."
+          exit 0
+        fi
+        echo "::set-output name=new_charts::$NEW_CHARTS"
+      shell: bash
 
     - name: Debug New Charts
-      run: echo "New Charts: ${{ env.new_charts }}"
+      if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
+      run: echo "New Charts: ${{ steps.find-new-charts.outputs.new_charts }}"
 
     - name: Package New Helm Charts
-      if: env.new_charts != ""
+      if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
       run: |
         mkdir -p packaged-charts
-        for chart in ${{ env.new_charts }}; do
+        for chart in ${{ steps.find-new-charts.outputs.new_charts }}; do
           helm package $chart --destination packaged-charts
         done
 
     - name: Checkout gh-pages Branch
+      if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
       uses: actions/checkout@v3
       with:
         ref: gh-pages  # Check out the gh-pages branch
 
     - name: Copy Packaged Charts
-      if: env.new_charts != ""
+      if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
       run: |
         mkdir -p charts
         mv ../packaged-charts/*.tgz charts/
 
     - name: Update Helm Repo Index
-      if: env.new_charts != ""
+      if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
       run: |
         helm repo index charts --url https://nodeify-eth.github.io/helm-charts/charts/
 
     - name: Commit and Push Changes
-      if: env.new_charts != ""
+      if: ${{ steps.find-new-charts.outputs.new_charts != '' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
