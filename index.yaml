@@ -23,6 +23,26 @@ entries:
     version: 1.0.0
   indexer-tools:
   - apiVersion: v2
+    appVersion: v3.4.0
+    created: "2025-02-18T16:52:58.979822257Z"
+    description: A Helm chart for Indexer Tools frontend application
+    digest: 02121ac117298e14561e79e3dd789bd5e0ddc8f50eca371592bb5030b56f3ab8
+    home: https://nodeify.net
+    keywords:
+    - graph
+    - blockchain
+    - indexer
+    maintainers:
+    - email: vince@nodeify.net
+      name: vince
+    name: indexer-tools
+    sources:
+    - https://indexer-tools.vincenttaglia.com/
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/indexer-tools-2.0.0/indexer-tools-2.0.0.tgz
+    version: 2.0.0
+  - apiVersion: v2
     appVersion: v3.4.0-beta5
     created: "2025-01-02T12:57:38.799709789Z"
     description: A Helm chart for Indexer Tools frontend application
@@ -42,4 +62,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/indexer-tools-1.0.0/indexer-tools-1.0.0.tgz
     version: 1.0.0
-generated: "2025-01-02T13:07:23.537604449Z"
+generated: "2025-02-18T16:52:58.979834871Z"
