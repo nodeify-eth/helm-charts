@@ -3,6 +3,26 @@ entries:
   cosmoshub-rpc:
   - apiVersion: v2
     appVersion: v21.0.0
+    created: "2025-03-06T01:30:22.032808901Z"
+    description: A Helm chart for deploying a Cosmoshub node
+    digest: 346e2acb10f7637bba6db1cd48b3db9196c89db210419088b81265dac3c80893
+    home: https://nodeify.net
+    keywords:
+    - cosmoshub
+    - blockchain
+    - rpc
+    maintainers:
+    - email: vince@nodeify.net
+      name: vince
+    name: cosmoshub-rpc
+    sources:
+    - https://github.com/cosmos/gaia
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/cosmoshub-rpc-1.0.1/cosmoshub-rpc-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: v21.0.0
     created: "2025-01-02T13:07:23.351353772Z"
     description: A Helm chart for deploying a Cosmoshub node
     digest: c00158d60ee53c330715647e1757cc563164d744b0f517fc0e453799f19b029a
@@ -22,6 +42,26 @@ entries:
     - https://github.com/nodeify-eth/helm-charts/releases/download/cosmoshub-rpc-1.0.0/cosmoshub-rpc-1.0.0.tgz
     version: 1.0.0
   indexer-tools:
+  - apiVersion: v2
+    appVersion: v3.4.0
+    created: "2025-03-06T01:30:22.160780526Z"
+    description: A Helm chart for Indexer Tools frontend application
+    digest: 8743c04ae410422fec86941162e4b3b6bd2574e7b17f46505b9f3db7609f6feb
+    home: https://nodeify.net
+    keywords:
+    - graph
+    - blockchain
+    - indexer
+    maintainers:
+    - email: vince@nodeify.net
+      name: vince
+    name: indexer-tools
+    sources:
+    - https://indexer-tools.vincenttaglia.com/
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/indexer-tools-2.1.0/indexer-tools-2.1.0.tgz
+    version: 2.1.0
   - apiVersion: v2
     appVersion: v3.4.0
     created: "2025-02-18T16:52:58.979822257Z"
@@ -62,4 +102,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/indexer-tools-1.0.0/indexer-tools-1.0.0.tgz
     version: 1.0.0
-generated: "2025-02-18T16:52:58.979834871Z"
+generated: "2025-03-06T01:30:22.160800182Z"
