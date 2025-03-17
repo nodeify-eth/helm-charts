@@ -3,7 +3,7 @@ name: cosmoshub-rpc
 description: A Helm chart for deploying a Cosmoshub node
 type: application
 version: 1.0.3
-appVersion: v21.0.1
+appVersion: v22.3.1
 maintainers:
   - name: vince
     email: vince@nodeify.net
