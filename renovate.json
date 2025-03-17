@@ -18,5 +18,5 @@
   "helmv3": {
     "enabled": true
   },
-  "recreateClosed": true
+  "recreateWhen": "always"
 }
