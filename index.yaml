@@ -4,6 +4,28 @@ entries:
   - annotations:
       lookupName: ghcr.io/cosmos/gaia
     apiVersion: v2
+    appVersion: v25.1.0
+    created: "2025-08-09T23:35:23.192739226Z"
+    description: A Helm chart for deploying a Cosmoshub node
+    digest: 28ef7750a17ceee255b675832606f78bbe74a1b097294e478df94f122387dc47
+    home: https://nodeify.net
+    keywords:
+    - cosmoshub
+    - blockchain
+    - rpc
+    maintainers:
+    - email: vince@nodeify.net
+      name: vince
+    name: cosmoshub-rpc
+    sources:
+    - https://github.com/cosmos/gaia
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/cosmoshub-rpc-1.0.7/cosmoshub-rpc-1.0.7.tgz
+    version: 1.0.7
+  - annotations:
+      lookupName: ghcr.io/cosmos/gaia
+    apiVersion: v2
     appVersion: v25.0.0
     created: "2025-08-04T16:14:10.431774064Z"
     description: A Helm chart for deploying a Cosmoshub node
@@ -210,4 +232,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/indexer-tools-1.0.0/indexer-tools-1.0.0.tgz
     version: 1.0.0
-generated: "2025-08-04T16:14:10.431803509Z"
+generated: "2025-08-09T23:35:23.192776756Z"
