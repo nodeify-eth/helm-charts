@@ -20,6 +20,52 @@ entries:
       licenses: Apache-2.0
     apiVersion: v2
     appVersion: v25.1.0
+    created: "2025-08-20T05:41:22.457088941Z"
+    description: A professional, production-ready Helm chart for deploying Cosmos
+      SDK blockchain nodes with enterprise-grade features
+    digest: d0663a1899261bf569ff48b4c7451f0501b61850891b354be7117b64c4a33496
+    home: https://cosmos.network
+    icon: https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/images/atom.png
+    keywords:
+    - cosmos
+    - blockchain
+    - cosmos-sdk
+    - validator
+    - rpc
+    - node
+    - statefulset
+    - persistence
+    maintainers:
+    - email: vince@nodeify.net
+      name: vince
+      url: https://nodeify.net
+    name: cosmos-node
+    sources:
+    - https://github.com/cosmos/cosmos-sdk
+    - https://github.com/cosmos/gaia
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/cosmos-node-2.5.2/cosmos-node-2.5.2.tgz
+    version: 2.5.2
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
+          description: "Converted from Deployment to StatefulSet with volume claim templates"
+        - kind: added
+          description: "Added comprehensive security features including RBAC, Network Policies, and Pod Security Standards"
+        - kind: added
+          description: "Added enterprise features: HPA, PDB, monitoring, and observability"
+        - kind: improved
+          description: "Enhanced bootstrap process with better error handling and retry logic"
+        - kind: improved
+          description: "Restructured values.yaml with 200+ configuration options and validation"
+      artifacthub.io/containsSecurityUpdates: "false"
+      artifacthub.io/operator: "false"
+      artifacthub.io/prerelease: "false"
+      category: Blockchain
+      licenses: Apache-2.0
+    apiVersion: v2
+    appVersion: v25.1.0
     created: "2025-08-20T01:50:23.429527904Z"
     description: A professional, production-ready Helm chart for deploying Cosmos
       SDK blockchain nodes with enterprise-grade features
@@ -555,4 +601,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/indexer-tools-1.0.0/indexer-tools-1.0.0.tgz
     version: 1.0.0
-generated: "2025-08-20T01:50:23.429588319Z"
+generated: "2025-08-20T05:41:22.457157169Z"
