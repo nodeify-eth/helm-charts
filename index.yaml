@@ -6,6 +6,38 @@ entries:
       licenses: Apache-2.0
     apiVersion: v2
     appVersion: v25.1.0
+    created: "2025-08-24T07:44:19.810867599Z"
+    description: A professional, production-ready Helm chart for deploying Cosmos
+      SDK blockchain nodes with enterprise-grade features
+    digest: 54a35cf2406014c488b081fb2bb343f35923e9a7a44a216e7f0b0c6094ae9ca6
+    home: https://cosmos.network
+    icon: https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/images/atom.png
+    keywords:
+    - cosmos
+    - blockchain
+    - cosmos-sdk
+    - validator
+    - rpc
+    - node
+    - statefulset
+    - persistence
+    maintainers:
+    - email: vince@nodeify.net
+      name: vince
+      url: https://nodeify.net
+    name: cosmos-node
+    sources:
+    - https://github.com/cosmos/cosmos-sdk
+    - https://github.com/cosmos/gaia
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/cosmos-node-2.5.6/cosmos-node-2.5.6.tgz
+    version: 2.5.6
+  - annotations:
+      category: Blockchain
+      licenses: Apache-2.0
+    apiVersion: v2
+    appVersion: v25.1.0
     created: "2025-08-21T03:35:38.645736934Z"
     description: A professional, production-ready Helm chart for deploying Cosmos
       SDK blockchain nodes with enterprise-grade features
@@ -697,4 +729,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/indexer-tools-1.0.0/indexer-tools-1.0.0.tgz
     version: 1.0.0
-generated: "2025-08-21T03:35:38.645798159Z"
+generated: "2025-08-24T07:44:19.810928985Z"
