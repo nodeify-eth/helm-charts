@@ -761,4 +761,25 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/indexer-tools-1.0.0/indexer-tools-1.0.0.tgz
     version: 1.0.0
-generated: "2025-09-06T19:26:43.894017662Z"
+  substreams-sink-noop:
+  - apiVersion: v2
+    appVersion: v1.4.0
+    created: "2025-09-09T01:42:03.511274884Z"
+    description: A Helm chart for Substreams Sink Noop
+    digest: 127465a128bcdcc7d4092dfeeda5c0eb2005d57b9553179437e57fef14d82bcd
+    home: https://nodeify.net
+    keywords:
+    - substreams
+    - noop
+    - substreams-sink
+    maintainers:
+    - email: vince@nodeify.net
+      name: vince
+    name: substreams-sink-noop
+    sources:
+    - https://github.com/streamingfast/substreams-sink-noop
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-sink-noop-1.0.0/substreams-sink-noop-1.0.0.tgz
+    version: 1.0.0
+generated: "2025-09-09T01:42:03.511350855Z"
