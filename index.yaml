@@ -898,4 +898,20 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-sink-noop-1.0.0/substreams-sink-noop-1.0.0.tgz
     version: 1.0.0
-generated: "2025-09-15T17:35:04.728073063Z"
+  substreams-tier-2:
+  - annotations:
+      lookupName: ghcr.io/streamingfast/firehose-ethereum
+    apiVersion: v2
+    appVersion: v2.12.4
+    created: "2025-09-15T17:39:39.013552376Z"
+    description: A Helm chart for deploying substreams-tier-2
+    digest: e121377bbc9358b1e78d060d884fc48475569cef29409107327a4ae0939fcbdc
+    keywords:
+    - substreams-tier-2
+    - firehose-ethereum
+    name: substreams-tier-2
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-tier-2-1.0.0/substreams-tier-2-1.0.0.tgz
+    version: 1.0.0
+generated: "2025-09-15T17:39:39.013625754Z"
