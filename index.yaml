@@ -764,6 +764,38 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/cosmoshub-rpc-1.0.0/cosmoshub-rpc-1.0.0.tgz
     version: 1.0.0
+  firehose-core:
+  - annotations:
+      lookupName: ghcr.io/streamingfast/firehose-core
+    apiVersion: v2
+    appVersion: v1.10.2
+    created: "2025-09-15T17:35:04.411005668Z"
+    description: A Helm chart for Kubernetes
+    digest: 11147421ac25d56604024f9c84d6269bcf2f4aa6f95c336692d30f9014489dc5
+    keywords:
+    - firehose
+    - substreams
+    name: firehose-core
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/firehose-core-1.0.0/firehose-core-1.0.0.tgz
+    version: 1.0.0
+  firehose-ethereum:
+  - annotations:
+      lookupName: ghcr.io/streamingfast/firehose-ethereum
+    apiVersion: v2
+    appVersion: v2.12.4-geth
+    created: "2025-09-15T17:35:04.728014794Z"
+    description: A Helm chart for Kubernetes
+    digest: fe5d81d123d525abd7f559027415f1b442b455df9ccbd447bed75bf41b042aa8
+    keywords:
+    - firehose
+    - substreams
+    name: firehose-ethereum
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/firehose-ethereum-1.0.0/firehose-ethereum-1.0.0.tgz
+    version: 1.0.0
   indexer-tools:
   - apiVersion: v2
     appVersion: v3.4.0
@@ -866,4 +898,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-sink-noop-1.0.0/substreams-sink-noop-1.0.0.tgz
     version: 1.0.0
-generated: "2025-09-09T22:30:10.136190934Z"
+generated: "2025-09-15T17:35:04.728073063Z"
