@@ -2,7 +2,7 @@ apiVersion: v2
 name: substreams-tier-2
 description: A Helm chart for deploying substreams-tier-2
 type: application
-version: 1.0.0
+version: 1.0.1
 appVersion: v2.13.2
 keywords:
   - substreams-tier-2
