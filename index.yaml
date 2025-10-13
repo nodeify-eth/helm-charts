@@ -768,6 +768,21 @@ entries:
   - annotations:
       lookupName: ghcr.io/streamingfast/firehose-core
     apiVersion: v2
+    appVersion: v1.11.2
+    created: "2025-10-13T15:57:25.151422385Z"
+    description: A Helm chart for Kubernetes
+    digest: 6a06553d3e600aa9ff31a21ec8d445e13737a134b15d493ec313e5a296106e25
+    keywords:
+    - firehose
+    - substreams
+    name: firehose-core
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/firehose-core-1.2.3/firehose-core-1.2.3.tgz
+    version: 1.2.3
+  - annotations:
+      lookupName: ghcr.io/streamingfast/firehose-core
+    apiVersion: v2
     appVersion: v1.11.1
     created: "2025-09-19T17:28:15.500745172Z"
     description: A Helm chart for Kubernetes
@@ -1034,4 +1049,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-tier-2-1.0.0/substreams-tier-2-1.0.0.tgz
     version: 1.0.0
-generated: "2025-09-19T17:28:15.781270758Z"
+generated: "2025-10-13T15:57:25.151509689Z"
