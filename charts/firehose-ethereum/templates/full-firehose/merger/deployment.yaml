@@ -21,6 +21,11 @@ spec:
         {{- include "firehose-ethereum.selectorLabels" . | nindent 8 }}
         {{- $componentLabel | nindent 8 }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "firehose-ethereum.serviceAccountName" . }}
       nodeSelector:
 {{ toYaml .Values.nodeSelector | indent 8 }}
       containers:

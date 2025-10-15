@@ -31,6 +31,11 @@ spec:
         app: firehose-chunk
         chunk: "{{ $i }}"
     spec:
+      {{- with $ctx.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "firehose-ethereum.serviceAccountName" $ctx }}
       restartPolicy: Always
       containers:
         - name: firehose
