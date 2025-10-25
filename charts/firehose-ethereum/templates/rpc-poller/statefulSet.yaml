@@ -28,6 +28,10 @@ spec:
             storage: {{ $values.storage.readerNode.size | quote }}
   template:
     metadata:
+      {{- with $values.components.rpcPoller.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         app: firehose-chunk
         chunk: "{{ $i }}"
@@ -37,6 +41,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "firehose-ethereum.serviceAccountName" $ctx }}
+      {{- with $values.components.rpcPoller.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       restartPolicy: Always
       containers:
         - name: firehose
@@ -44,6 +52,10 @@ spec:
           imagePullPolicy: {{ $ctx.Values.image.pullPolicy }}
           args: ["start", "-c", "/config/chunk-{{ $i }}.yaml"]
           {{- include "firehose-ethereum.envVars" (dict "context" $ctx "component" $values.components.rpcPoller) | nindent 10 }}
+          {{- with $values.components.rpcPoller.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - name: reader-grpc
               containerPort: 10010

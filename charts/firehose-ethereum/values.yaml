@@ -73,6 +73,32 @@ fullMode:
       # -- Checkpoint sync URL for faster initial sync
       checkpointSyncUrl: "https://sync-mainnet.beaconcha.in"
 
+      # -- Resource requests and limits for lighthouse beacon node
+      resources: {}
+        # limits:
+        #   cpu: 4000m
+        #   memory: 16Gi
+        # requests:
+        #   cpu: 2000m
+        #   memory: 8Gi
+
+      # -- Affinity rules for lighthouse beacon node pod scheduling
+      affinity: {}
+        # podAntiAffinity:
+        #   requiredDuringSchedulingIgnoredDuringExecution:
+        #   - labelSelector:
+        #       matchExpressions:
+        #       - key: app.kubernetes.io/component
+        #         operator: In
+        #         values:
+        #         - beacon
+        #     topologyKey: kubernetes.io/hostname
+
+      # -- Annotations to add to lighthouse beacon node pods
+      podAnnotations: {}
+        # prometheus.io/scrape: "true"
+        # prometheus.io/port: "5054"
+
     substreams:
       # -- Enable Substreams Tier 1
       enabled: false
@@ -170,6 +196,32 @@ fullMode:
       #     configMapKeyRef:
       #       name: my-configmap
       #       key: config-key
+
+      # -- Resource requests and limits for reader node
+      resources: {}
+        # limits:
+        #   cpu: 8000m
+        #   memory: 32Gi
+        # requests:
+        #   cpu: 4000m
+        #   memory: 16Gi
+
+      # -- Affinity rules for reader node pod scheduling
+      affinity: {}
+        # podAntiAffinity:
+        #   requiredDuringSchedulingIgnoredDuringExecution:
+        #   - labelSelector:
+        #       matchExpressions:
+        #       - key: app.kubernetes.io/component
+        #         operator: In
+        #         values:
+        #         - reader
+        #     topologyKey: kubernetes.io/hostname
+
+      # -- Annotations to add to reader node pods
+      podAnnotations: {}
+        # prometheus.io/scrape: "true"
+        # prometheus.io/port: "9102"
 
       config:
         # -- Execution binary path
@@ -295,6 +347,33 @@ chunkMode:
       #     configMapKeyRef:
       #       name: my-configmap
       #       key: config-key
+
+      # -- Resource requests and limits for rpc poller
+      resources: {}
+        # limits:
+        #   cpu: 2000m
+        #   memory: 8Gi
+        # requests:
+        #   cpu: 1000m
+        #   memory: 4Gi
+
+      # -- Affinity rules for rpc poller pod scheduling
+      affinity: {}
+        # podAntiAffinity:
+        #   preferredDuringSchedulingIgnoredDuringExecution:
+        #   - weight: 100
+        #     podAffinityTerm:
+        #       labelSelector:
+        #         matchExpressions:
+        #         - key: app
+        #           operator: In
+        #           values:
+        #           - firehose-chunk
+        #       topologyKey: kubernetes.io/hostname
+
+      # -- Annotations to add to rpc poller pods
+      podAnnotations: {}
+        # prometheus.io/scrape: "true"
 
     remoteFirehose:
       # -- Firehose endpoint to fetch processed block data
