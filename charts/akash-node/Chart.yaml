@@ -1,5 +1,5 @@
 apiVersion: v2
-name: cosmos-node
+name: akash-node
 description: A professional, production-ready Helm chart for deploying Cosmos SDK blockchain nodes with enterprise-grade features
 type: application
 version: 1.0.0
