@@ -64,14 +64,28 @@ fullMode:
       # -- Enable Lighthouse for beacon chain synchronization
       enabled: true
       
-      # -- Ethereum network (mainnet, goerli, sepolia, holesky)
-      network: mainnet
-      
-      # -- Remove old blob data to save space (recommended for non-archive nodes)
-      pruneBlobs: true
-      
-      # -- Checkpoint sync URL for faster initial sync
-      checkpointSyncUrl: "https://sync-mainnet.beaconcha.in"
+      # -- Number of replicas for the Lighthouse beacon node
+      replicas: 1
+
+      # -- Image configuration for Lighthouse
+      image:
+        repository: sigp/lighthouse
+        pullPolicy: IfNotPresent
+        tag: "v7.1.0"
+
+      # -- Lighthouse beacon node configuration
+      config:
+        # -- Ethereum network (mainnet, sepolia, holesky)
+        network: mainnet
+        # -- Checkpoint sync URL for faster initial sync
+        checkpointSyncUrl: "https://sync-mainnet.beaconcha.in"
+        # -- Remove old blob data to save space (recommended for non-archive nodes)
+        pruneBlobs: true
+
+      # -- Additional arguments to pass to lighthouse beacon_node
+      extraArgs: []
+      # - --suggested-fee-recipient=0x...
+      # - --builder=https://builder-api.example.com
 
       # -- Resource requests and limits for lighthouse beacon node
       resources: {}
@@ -98,6 +112,64 @@ fullMode:
       podAnnotations: {}
         # prometheus.io/scrape: "true"
         # prometheus.io/port: "5054"
+    
+    opNode:
+      # -- Enable OP Node for Optimism L2 execution layer synchronization
+      enabled: false
+      
+      # -- Number of replicas for the OP Node
+      replicas: 1
+
+      # -- Image configuration for OP Node
+      image:
+        repository: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node
+        pullPolicy: IfNotPresent
+        tag: "1.14.3"
+
+      # -- OP Node configuration
+      config:
+        # -- Optimism network to sync (op-mainnet, base-mainnet, etc.)
+        network: op-mainnet
+        # -- Ethereum L1 RPC endpoint
+        l1: https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID
+        # -- Ethereum L1 beacon chain endpoint
+        l1Beacon: https://sync-mainnet.beaconcha.in
+        # -- Ethereum L1 beacon chain archiver endpoint
+        l1BeaconArchiver: https://sync-mainnet.beaconcha.in
+        # -- L1 RPC kind (standard, erigon, etc.)
+        l1RpcKind: standard
+        # -- Trust L1 RPC without verification
+        l1TrustRpc: true
+
+      # -- Additional arguments to pass to op-node
+      extraArgs: []
+      # - --additional-flag=value
+
+      # -- Resource requests and limits for op-node
+      resources: {}
+        # limits:
+        #   cpu: 4000m
+        #   memory: 16Gi
+        # requests:
+        #   cpu: 2000m
+        #   memory: 8Gi
+
+      # -- Affinity rules for op-node pod scheduling
+      affinity: {}
+        # podAntiAffinity:
+        #   requiredDuringSchedulingIgnoredDuringExecution:
+        #   - labelSelector:
+        #       matchExpressions:
+        #       - key: app.kubernetes.io/component
+        #         operator: In
+        #         values:
+        #         - op-node
+        #     topologyKey: kubernetes.io/hostname
+
+      # -- Annotations to add to op-node pods
+      podAnnotations: {}
+        # prometheus.io/scrape: "true"
+        # prometheus.io/port: "7300"
 
     substreams:
       # -- Enable Substreams Tier 1

@@ -1,0 +1,94 @@
+{{- $values := $.Values.fullMode }}
+{{- $componentName := "op-node" }}
+{{- $componentLabel := include "firehose-ethereum.componentLabelFor" $componentName }}
+{{- if and (eq .Values.mode "full") $values.components.opNode.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-firehose-{{ $componentName }}
+  labels:
+    {{- include "firehose-ethereum.labels" . | nindent 4 }}
+    {{- $componentLabel | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "firehose-ethereum.selectorLabels" . | nindent 6 }}
+      {{- $componentLabel | nindent 6 }}
+  replicas: {{ $values.components.opNode.replicas }}
+  template:
+    metadata:
+      {{- with $values.components.opNode.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "firehose-ethereum.selectorLabels" . | nindent 8 }}
+        {{- $componentLabel | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "firehose-ethereum.serviceAccountName" . }}
+      {{- with $values.components.opNode.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+      containers:
+        - name: {{ $componentName }}
+          image: "{{ $values.components.opNode.image.repository }}:{{ $values.components.opNode.image.tag }}"
+          imagePullPolicy: {{ $values.components.opNode.image.pullPolicy }}
+          command:
+            - op-node
+          args:
+            - --network={{ $values.components.opNode.config.network }}
+            - --l1={{ $values.components.opNode.config.l1 }}
+            - --l1.beacon={{ $values.components.opNode.config.l1Beacon }}
+            - --l1.beacon-archiver={{ $values.components.opNode.config.l1BeaconArchiver }}
+            - --l1.beacon.fetch-all-sidecars=true
+            - --l1.rpckind={{ $values.components.opNode.config.l1RpcKind }}
+            - --l1.trustrpc={{ $values.components.opNode.config.l1TrustRpc }}
+            - --l2=http://{{ .Release.Name }}-firehose-reader-svc:8551
+            - --l2.enginekind=geth
+            - --l2.jwt-secret=/jwt/jwt.hex
+            - --syncmode=execution-layer
+            - --verifier.l1-confs=4
+            - --log.color=true
+            - --log.format=logfmt
+            - --metrics.enabled=true
+            - --metrics.port=7300
+            - --rpc.addr=0.0.0.0
+            - --rpc.port=9545
+            - --p2p.listen.ip=0.0.0.0
+            - --p2p.listen.tcp=9222
+            {{- with $values.components.opNode.extraArgs }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with $values.components.opNode.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http-rpc
+              containerPort: 9545
+              protocol: TCP
+            - name: http-metrics
+              containerPort: 7300
+              protocol: TCP
+            - name: p2p-tcp
+              containerPort: 9222
+              protocol: TCP
+            - name: p2p-udp
+              containerPort: 9222
+              protocol: UDP
+          volumeMounts:
+            - name: jwt-secret
+              mountPath: /jwt
+              readOnly: true
+      volumes:
+        - name: jwt-secret
+          secret:
+            secretName: {{ .Release.Name }}-firehose-jwt
+{{- end }}

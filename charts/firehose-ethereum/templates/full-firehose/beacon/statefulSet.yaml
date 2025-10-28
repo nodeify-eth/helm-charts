@@ -14,6 +14,7 @@ spec:
     matchLabels:
       {{- include "firehose-ethereum.selectorLabels" . | nindent 6 }}
       {{- $componentLabel | nindent 6 }}
+  replicas: {{ $values.components.lighthouse.replicas }}
   volumeClaimTemplates:
     - metadata:
         name: storage
@@ -46,27 +47,31 @@ spec:
 {{ toYaml .Values.nodeSelector | indent 8 }}
       containers:
         - name: {{ $componentName }}
-          image: sigp/lighthouse:latest-amd64
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ $values.components.lighthouse.image.repository }}:{{ $values.components.lighthouse.image.tag }}"
+          imagePullPolicy: {{ $values.components.lighthouse.image.pullPolicy }}
           command:
             - lighthouse
+          args:
             - beacon_node
             - --datadir=/data
             - --http
             - --http-address=0.0.0.0
             - --execution-jwt=/jwt/jwt.hex
-            - --network={{ $values.components.lighthouse.network }}
-            - --checkpoint-sync-url={{ $values.components.lighthouse.checkpointSyncUrl }}
+            - --network={{ $values.components.lighthouse.config.network }}
+            - --checkpoint-sync-url={{ $values.components.lighthouse.config.checkpointSyncUrl }}
             - --execution-endpoint=http://{{ .Release.Name }}-firehose-reader-svc:8551
-            - --prune-blobs={{ $values.components.lighthouse.pruneBlobs }}
+            - --prune-blobs={{ $values.components.lighthouse.config.pruneBlobs }}
             - --metrics
             - --metrics-address=0.0.0.0
+            {{- with $values.components.lighthouse.extraArgs }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           {{- with $values.components.lighthouse.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
-            - name: http-lighthouse
+            - name: http-api
               containerPort: 5052
               protocol: TCP
             - name: http-metrics
@@ -82,5 +87,4 @@ spec:
         - name: jwt-secret
           secret:
             secretName: {{ .Release.Name }}-firehose-jwt
-
 {{- end }}

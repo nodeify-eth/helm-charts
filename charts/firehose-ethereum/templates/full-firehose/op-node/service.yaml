@@ -1,7 +1,7 @@
 {{- $values := $.Values.fullMode }}
-{{- $componentName := "beacon" }}
+{{- $componentName := "op-node" }}
 {{- $componentLabel := include "firehose-ethereum.componentLabelFor" $componentName }}
-{{- if and (eq .Values.mode "full") $values.components.lighthouse.enabled }}
+{{- if and (eq .Values.mode "full") $values.components.opNode.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -15,12 +15,13 @@ spec:
     {{- include "firehose-ethereum.selectorLabels" . | nindent 4 }}
     {{- $componentLabel | nindent 4 }}
   ports:
-    - name: http-api
-      port: 5052
-      targetPort: http-api
+    - name: http-rpc
+      port: 9545
+      targetPort: http-rpc
       protocol: TCP
     - name: http-metrics
-      port: 5054
+      port: 7300
       targetPort: http-metrics
       protocol: TCP
 {{- end }}
+

@@ -2,8 +2,8 @@ apiVersion: v2
 name: firehose-ethereum
 description: A Helm chart for Kubernetes
 type: application
-version: 1.2.4
-appVersion: v2.13.1-geth
+version: 1.2.5
+appVersion: v2.14.1-geth
 keywords:
   - firehose
   - substreams
