@@ -1,0 +1,547 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cosmos-node.fullname" . }}-scripts
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "cosmos-node.labels" . | nindent 4 }}
+  {{- with (include "cosmos-node.commonAnnotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+data:
+  init.sh: |
+    #!/bin/sh
+    set -eu
+    
+    # Configuration from environment
+    CHAIN_HOME="${CHAIN_HOME:-/home/cosmos/.gaia}"
+    CONFIG_DIR="$CHAIN_HOME/config"
+    DATA_DIR="$CHAIN_HOME/data"
+    DAEMON_NAME="${DAEMON_NAME:-gaiad}"
+    
+    # Flag file for tracking snapshot download
+    SNAPSHOT_FLAG_FILE="$CHAIN_HOME/.snapshot_downloaded"
+    
+    # Color codes for output
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    BLUE='\033[0;34m'
+    NC='\033[0m'
+    
+    log() {
+        echo -e "${2:-$NC}$(date '+%Y-%m-%d %H:%M:%S') [INIT] $1${NC}"
+    }
+    
+    error_exit() {
+        log "ERROR: $1" "$RED"
+        exit 1
+    }
+    
+    log "Setting up directory structure..." "$BLUE"
+    mkdir -p "$CONFIG_DIR" "$DATA_DIR"
+    
+    # Download and verify genesis file
+    download_genesis() {
+        local genesis_file="$CONFIG_DIR/genesis.json"
+        
+        local downloaded_genesis="$CONFIG_DIR/genesis.json.downloaded"
+        
+        if [ -f "$downloaded_genesis" ]; then
+            log "Genesis file already downloaded, skipping download" "$YELLOW"
+            return 0
+        fi
+        
+        log "Downloading genesis from: $GENESIS_URL" "$BLUE"
+        
+        local max_retries=3
+        local retry=0
+        
+        while [ $retry -lt $max_retries ]; do
+            if wget -q --timeout=300 --tries=3 -O "$downloaded_genesis.tmp" "$GENESIS_URL"; then
+                local file_size
+                file_size=$(stat -c%s "$downloaded_genesis.tmp" 2>/dev/null || echo "0")
+                log "Downloaded genesis file size: $file_size bytes" "$BLUE"
+                if [ "$file_size" -gt 10000000 ]; then
+                    if head -c 1 "$downloaded_genesis.tmp" | grep -q '{'; then
+                        mv "$downloaded_genesis.tmp" "$downloaded_genesis"
+                        log "Large genesis file downloaded successfully" "$GREEN"
+                    else
+                        log "Downloaded file doesn't appear to be JSON, retrying..." "$YELLOW"
+                        rm -f "$downloaded_genesis.tmp"
+                        continue
+                    fi
+                else
+                    if jq empty "$downloaded_genesis.tmp" 2>/dev/null; then
+                        mv "$downloaded_genesis.tmp" "$downloaded_genesis"
+                        log "Genesis file downloaded and validated successfully" "$GREEN"
+                    else
+                        log "Downloaded genesis file is not valid JSON, retrying..." "$YELLOW"
+                        rm -f "$downloaded_genesis.tmp"
+                        continue
+                    fi
+                fi
+                {{- if .Values.bootstrap.genesis.checksum }}
+                # Verify checksum if provided
+                if echo "{{ .Values.bootstrap.genesis.checksum }}  $genesis_file" | sha256sum -c -; then
+                    log "Genesis checksum verified" "$GREEN"
+                else
+                    error_exit "Genesis checksum verification failed"
+                fi
+                {{- end }}
+                return 0
+            else
+                log "Failed to download genesis (attempt $((retry+1))/$max_retries)" "$YELLOW"
+            fi
+            
+            retry=$((retry + 1))
+            [ $retry -lt $max_retries ] && sleep 10
+        done
+        
+        error_exit "Failed to download genesis file after $max_retries attempts"
+    }
+    
+    # Download address book
+    download_addrbook() {
+        local addrbook_file="$CONFIG_DIR/addrbook.json"
+        
+        log "Downloading address book from: $ADDRBOOK_URL" "$BLUE"
+        
+        if wget -q --timeout=30 -O "$addrbook_file.tmp" "$ADDRBOOK_URL"; then
+            if jq empty "$addrbook_file.tmp" 2>/dev/null; then
+                mv "$addrbook_file.tmp" "$addrbook_file"
+                log "Address book downloaded successfully" "$GREEN"
+            else
+                log "Downloaded address book is not valid JSON, using empty file" "$YELLOW"
+                echo '{"addrs": []}' > "$addrbook_file"
+                rm -f "$addrbook_file.tmp"
+            fi
+        else
+            log "Failed to download address book, creating empty file" "$YELLOW"
+            echo '{"addrs": []}' > "$addrbook_file"
+        fi
+    }
+    
+    # Configure seeds
+    configure_seeds() {
+        local config_file="$CONFIG_DIR/config.toml"
+        local seeds="${SEEDS_LIST:-}"
+        
+        if [ -z "$seeds" ]; then
+            log "No seeds configured, skipping" "$YELLOW"
+            return 0
+        fi
+        
+        log "Configuring seeds: ${seeds:0:100}..." "$BLUE"
+        
+        # Ensure config directory exists
+        mkdir -p "$CONFIG_DIR"
+        
+        if [ -f "$config_file" ]; then
+            # Update existing config.toml
+            if grep -q "^seeds = " "$config_file"; then
+                # Replace existing seeds line
+                sed -i "s/^seeds = .*/seeds = \"$seeds\"/" "$config_file"
+                log "Updated existing seeds configuration" "$GREEN"
+            else
+                # Add seeds to [p2p] section
+                if grep -q "^\[p2p\]" "$config_file"; then
+                    # [p2p] section exists, add seeds after it
+                    sed -i "/^\[p2p\]/a seeds = \"$seeds\"" "$config_file"
+                else
+                    # No [p2p] section, create it
+                    echo -e "\n[p2p]\nseeds = \"$seeds\"" >> "$config_file"
+                fi
+                log "Added seeds to existing config" "$GREEN"
+            fi
+        else
+            # Create minimal config.toml with seeds
+            {
+                echo "# Cosmos SDK Node Configuration"
+                echo ""
+                echo "[p2p]"
+                echo "# Seed nodes for initial peer discovery"
+                echo "seeds = \"$seeds\""
+            } > "$config_file"
+            log "Created new config.toml with seeds" "$GREEN"
+        fi
+        
+        # Validate the configuration
+        if grep -q "seeds = \"$seeds\"" "$config_file"; then
+            log "Seeds configuration verified successfully" "$GREEN"
+        else
+            log "Warning: Seeds configuration verification failed" "$YELLOW"
+        fi
+    }
+    
+    # Download and extract snapshot
+    download_snapshot() {
+        if [ "${SNAPSHOT_ENABLED:-false}" != "true" ]; then
+            log "Snapshot download disabled" "$YELLOW"
+            return 0
+        fi
+        
+        # Check if snapshot was already downloaded using flag file
+        if [ -f "$SNAPSHOT_FLAG_FILE" ]; then
+            log "Snapshot already downloaded (flag file exists: $SNAPSHOT_FLAG_FILE), skipping" "$YELLOW"
+            return 0
+        fi
+        
+        # Check if data already exists
+        if [ -f "$DATA_DIR/priv_validator_state.json" ]; then
+            log "Blockchain data already exists, skipping snapshot" "$YELLOW"
+            # Create flag file to indicate snapshot process was completed (even if skipped)
+            touch "$SNAPSHOT_FLAG_FILE"
+            echo "$(date '+%Y-%m-%d %H:%M:%S') - Snapshot skipped due to existing data" > "$SNAPSHOT_FLAG_FILE"
+            return 0
+        fi
+        
+        # Parse snapshot source
+        local source_type="${SNAPSHOT_SOURCE%%:*}"
+        local source_value="${SNAPSHOT_SOURCE#*:}"
+        local snapshot_url=""
+        
+        case "$source_type" in
+            "direct")
+                snapshot_url="$source_value"
+                log "Using direct snapshot URL: $snapshot_url" "$BLUE"
+                ;;
+            "command")
+                log "Executing custom command to get snapshot URL: $source_value" "$BLUE"
+                if snapshot_url=$(eval "$source_value" 2>/dev/null | head -1); then
+                    snapshot_url=$(echo "$snapshot_url" | tr -d '"' | xargs)
+                    log "Command returned URL: $snapshot_url" "$GREEN"
+                else
+                    log "Failed to execute snapshot command" "$RED"
+                    return 0
+                fi
+                ;;
+            "none"|*)
+                log "No snapshot source configured, skipping" "$YELLOW"
+                return 0
+                ;;
+        esac
+        
+        # Validate the snapshot URL
+        if [ -z "$snapshot_url" ] || [ "$snapshot_url" = "null" ] || [ "$snapshot_url" = "empty" ]; then
+            log "No valid snapshot URL available" "$YELLOW"
+            return 0
+        fi
+        
+        # Validate URL format
+        if ! echo "$snapshot_url" | grep -q '^https\?://'; then
+            log "Invalid snapshot URL format: $snapshot_url" "$RED"
+            return 0
+        fi
+        
+        cd "$CHAIN_HOME"
+        
+        local snapshot_file
+        snapshot_file=$(basename "$snapshot_url")
+        
+        log "Downloading snapshot to: $snapshot_file" "$BLUE"
+        
+        if timeout "${SNAPSHOT_TIMEOUT:-60}m" curl -L --progress-bar --fail --retry 3 --retry-delay 5 -C - -o "$snapshot_file" "$snapshot_url"; then
+            
+            log "Snapshot downloaded successfully, extracting..." "$BLUE"
+            
+            if [ ! -f "$snapshot_file" ]; then
+                log "Snapshot file not found after download" "$RED"
+                return 1
+            fi
+            
+            local file_size
+            file_size=$(stat -c%s "$snapshot_file" 2>/dev/null || wc -c < "$snapshot_file" 2>/dev/null || echo "0")
+            if [ "$file_size" -lt 1000000 ]; then
+                log "Downloaded file seems too small (${file_size} bytes), possibly corrupted" "$YELLOW"
+                head -5 "$snapshot_file" 2>/dev/null || true
+                rm -f "$snapshot_file"
+                return 0
+            fi
+            
+            log "Extracting snapshot (${file_size} bytes)..." "$BLUE"
+            
+            local extraction_success=false
+            
+            case "$snapshot_file" in
+                *.tar.lz4)
+                    log "Extracting LZ4 compressed tar file..." "$BLUE"
+                    if lz4 -d "$snapshot_file" --stdout | tar -xf -; then
+                        log "Snapshot extracted successfully" "$GREEN"
+                        extraction_success=true
+                    else
+                        log "Failed to extract lz4 snapshot, continuing without it" "$YELLOW"
+                        rm -f "$snapshot_file"
+                        return 0
+                    fi
+                    ;;
+                *.tar.gz|*.tgz)
+                    log "Extracting gzipped tar file..." "$BLUE"
+                    if tar -xzf "$snapshot_file"; then
+                        log "Snapshot extracted successfully" "$GREEN"
+                        extraction_success=true
+                    else
+                        log "Failed to extract gzipped snapshot, continuing without it" "$YELLOW"
+                        rm -f "$snapshot_file"
+                        return 0
+                    fi
+                    ;;
+                *.tar)
+                    log "Extracting tar file..." "$BLUE"
+                    if tar -xf "$snapshot_file"; then
+                        log "Snapshot extracted successfully" "$GREEN"
+                        extraction_success=true
+                    else
+                        log "Failed to extract tar snapshot, continuing without it" "$YELLOW"
+                        rm -f "$snapshot_file"
+                        return 0
+                    fi
+                    ;;
+                *)
+                    log "Unknown snapshot format: $snapshot_file" "$YELLOW"
+                    if file "$snapshot_file" | grep -q "LZ4"; then
+                        log "Detected LZ4 file by content, attempting LZ4 extraction..." "$BLUE"
+                        if lz4 -d "$snapshot_file" --stdout | tar -xf -; then
+                            log "Snapshot extracted successfully" "$GREEN"
+                            extraction_success=true
+                        else
+                            log "Failed to extract detected LZ4 file, continuing without it" "$YELLOW"
+                            rm -f "$snapshot_file"
+                            return 0
+                        fi
+                    else
+                        log "Trying as regular tar file..." "$YELLOW"
+                        if tar -xf "$snapshot_file" 2>/dev/null; then
+                            log "Snapshot extracted successfully" "$GREEN"
+                            extraction_success=true
+                        else
+                            log "Failed to extract snapshot, continuing without it" "$YELLOW"
+                            rm -f "$snapshot_file"
+                            return 0
+                        fi
+                    fi
+                    ;;
+            esac
+            
+            # Create flag file if extraction was successful
+            if [ "$extraction_success" = "true" ]; then
+                {
+                    echo "Snapshot downloaded and extracted successfully"
+                    echo "Date: $(date '+%Y-%m-%d %H:%M:%S')"
+                    echo "URL: $snapshot_url"
+                    echo "File: $snapshot_file"
+                    echo "Size: $file_size bytes"
+                    echo "Chain Home: $CHAIN_HOME"
+                } > "$SNAPSHOT_FLAG_FILE"
+                log "Created snapshot flag file: $SNAPSHOT_FLAG_FILE" "$GREEN"
+            fi
+            
+            # Cleanup
+            rm -f "$snapshot_file"
+            log "Snapshot setup completed" "$GREEN"
+        else
+            log "Failed to download snapshot, continuing without it" "$YELLOW"
+            rm -f "$snapshot_file"
+        fi
+    }
+    
+    init_chain_structure() {
+        log "Setting up chain directory structure..." "$BLUE"
+        
+        mkdir -p "$CONFIG_DIR" "$DATA_DIR"
+        chmod 755 "$CHAIN_HOME" "$CONFIG_DIR" "$DATA_DIR"
+        chown -R 1000:1000 "$CHAIN_HOME"
+        
+        log "Chain directory structure ready" "$GREEN"
+    }
+    
+    configure_state_sync() {
+        if [ "${STATE_SYNC_ENABLED:-false}" != "true" ]; then
+            log "State sync disabled" "$YELLOW"
+            return 0
+        fi
+        
+        local rpc_server="${STATE_SYNC_RPC:-}"
+        local height_offset="${STATE_SYNC_HEIGHT_OFFSET:-2000}"
+        
+        if [ -z "$rpc_server" ]; then
+            log "State sync enabled but no RPC server configured" "$RED"
+            return 1
+        fi
+        
+        log "Configuring state sync with RPC: $rpc_server" "$BLUE"
+        
+        log "Getting latest block height..." "$BLUE"
+        local latest_height
+        if ! latest_height=$(curl -s "$rpc_server/block" | jq -r .result.block.header.height 2>/dev/null); then
+            log "Failed to get latest height from RPC" "$RED"
+            return 1
+        fi
+        
+        local trust_height=$((latest_height - height_offset))
+        log "Calculated trust height: $trust_height (latest: $latest_height, offset: $height_offset)" "$BLUE"
+        
+        log "Getting trust hash for height $trust_height..." "$BLUE"
+        local trust_hash
+        if ! trust_hash=$(curl -s "$rpc_server/block?height=$trust_height" | jq -r .result.block_id.hash 2>/dev/null); then
+            log "Failed to get trust hash from RPC" "$RED"
+            return 1
+        fi
+        
+        log "Trust hash: $trust_hash" "$GREEN"
+        
+        local config_file="$CONFIG_DIR/config.toml"
+        if [ ! -f "$config_file" ]; then
+            log "Config file not found, creating minimal config for state sync..." "$YELLOW"
+            echo '[rpc]' > "$config_file"
+            echo 'laddr = "tcp://0.0.0.0:26657"' >> "$config_file"
+            echo '' >> "$config_file"
+            echo '[p2p]' >> "$config_file"
+            echo 'laddr = "tcp://0.0.0.0:26656"' >> "$config_file"
+            echo '' >> "$config_file"
+            echo '[statesync]' >> "$config_file"
+            echo 'enable = false' >> "$config_file"
+            echo 'rpc_servers = ""' >> "$config_file"
+            echo 'trust_height = 0' >> "$config_file"
+            echo 'trust_hash = ""' >> "$config_file"
+        fi
+        
+        log "Updating config.toml with state sync settings..." "$BLUE"
+        sed -i.bak -E '/^\[statesync\]/,/^\[/{s|^(enable[[:space:]]+=[[:space:]]+).*$|\1true|;}' "$config_file"
+        sed -i.bak -E '/^\[statesync\]/,/^\[/{s|^(rpc_servers[[:space:]]+=[[:space:]]+).*$|\1\"'$rpc_server'\"|;}' "$config_file"
+        sed -i.bak -E '/^\[statesync\]/,/^\[/{s|^(trust_height[[:space:]]+=[[:space:]]+).*$|\1'$trust_height'|;}' "$config_file"
+        sed -i.bak -E '/^\[statesync\]/,/^\[/{s|^(trust_hash[[:space:]]+=[[:space:]]+).*$|\1\"'$trust_hash'\"|;}' "$config_file"
+        
+        rm -f "$config_file.bak"
+        log "State sync configured successfully" "$GREEN"
+    }
+    
+    is_initialized() {
+        if [ -f "$CONFIG_DIR/genesis.json.downloaded" ] && \
+           [ -f "$CONFIG_DIR/config.toml" ] && \
+           [ -f "$CONFIG_DIR/app.toml" ] && \
+           [ -d "$DATA_DIR" ] && \
+           [ "$(ls -A "$DATA_DIR" 2>/dev/null)" ]; then
+            return 0
+        fi
+        return 1
+    }
+
+    main() {
+        log "Starting initialization for $CHAIN_NAME..." "$GREEN"
+        log "Using daemon: $DAEMON_NAME"
+        log "Chain home: $CHAIN_HOME"
+        
+        if is_initialized; then
+            log "Node already initialized, skipping initialization..." "$YELLOW"
+            
+            # Check and display snapshot flag status
+            if [ -f "$SNAPSHOT_FLAG_FILE" ]; then
+                log "Snapshot flag file found. Contents:" "$BLUE"
+                cat "$SNAPSHOT_FLAG_FILE" | while IFS= read -r line; do
+                    log "  $line" "$BLUE"
+                done
+            fi
+            
+            log "Setting final ownership..." "$BLUE"
+            chown -R 1000:1000 "$CHAIN_HOME"
+            
+            log "Initialization check completed!" "$GREEN"
+            return 0
+        fi
+        
+        log "Node needs initialization, proceeding..." "$BLUE"
+        
+        # Install required packages only when initializing
+        log "Installing required packages..." "$BLUE"
+        apk add --no-cache wget curl jq tar lz4
+        
+        if [ "${STATE_SYNC_ENABLED:-false}" = "true" ] && [ "${SNAPSHOT_ENABLED:-false}" = "true" ]; then
+            log "ERROR: Cannot enable both snapshot and state sync - choose one" "$RED"
+            exit 1
+        fi
+        
+        init_chain_structure
+        download_genesis
+        download_addrbook
+        configure_seeds
+        configure_state_sync
+        download_snapshot
+        log "Setting final ownership..." "$BLUE"
+        chown -R 1000:1000 "$CHAIN_HOME"
+        
+        log "Initialization completed successfully!" "$GREEN"
+    }
+    
+    # Execute main function
+    main "$@"
+
+  entrypoint.sh: |
+    #!/bin/sh
+    set -eu
+    
+    # Configuration
+    CHAIN_HOME="${HOME:-/home/cosmos/.gaia}"
+    CONFIG_DIR="$CHAIN_HOME/config"
+    CHAIN_ID="${CHAIN_ID:-cosmoshub-4}"
+    DAEMON_NAME="${DAEMON_NAME:-gaiad}"
+    
+    # Color codes for output
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    BLUE='\033[0;34m'
+    NC='\033[0m'
+    
+    log() {
+        echo -e "${2:-$NC}$(date '+%Y-%m-%d %H:%M:%S') [ENTRYPOINT] $1${NC}"
+    }
+    
+    check_chain_init() {
+        if [ ! -f "$CONFIG_DIR/genesis.json" ] || [ ! -f "$CONFIG_DIR/config.toml" ]; then
+            log "Chain not properly initialized, initializing..." "$YELLOW"
+            
+            if ! "$DAEMON_NAME" genesis init validator --chain-id "$CHAIN_ID" --home "$CHAIN_HOME" --overwrite; then
+                log "Failed to initialize chain" "$RED"
+                exit 1
+            fi
+            
+            log "Chain initialized successfully" "$GREEN"
+            
+            if [ -f "$CONFIG_DIR/genesis.json.downloaded" ]; then
+                log "Using downloaded genesis file..." "$BLUE"
+                mv "$CONFIG_DIR/genesis.json.downloaded" "$CONFIG_DIR/genesis.json"
+            fi
+        else
+            log "Chain already initialized" "$GREEN"
+        fi
+    }
+    
+    configure_prometheus() {
+        {{- if .Values.daemon.monitoring.prometheus }}
+        local config_toml="$CONFIG_DIR/config.toml"
+        if [ -f "$config_toml" ]; then
+            log "Enabling Prometheus in config.toml..." "$BLUE"
+            # Set prometheus = true in [instrumentation] section
+            sed -i '/^\[instrumentation\]/,/^\[/ s/^prometheus = .*/prometheus = true/' "$config_toml"
+            # Set prometheus listen address 
+            sed -i '/^\[instrumentation\]/,/^\[/ s/^prometheus_listen_addr = .*/prometheus_listen_addr = ":{{ .Values.chain.ports.prometheus }}"/' "$config_toml"
+        fi
+        {{- else }}
+        log "Prometheus monitoring disabled, using default config.toml settings" "$YELLOW"
+        {{- end }}
+    }
+    
+    main() {
+        log "Starting Cosmos node entrypoint..." "$GREEN"
+        log "Chain home: $CHAIN_HOME"
+        log "Chain ID: $CHAIN_ID"
+        
+        check_chain_init
+        configure_prometheus
+        log "Starting daemon with: $*" "$BLUE"
+        exec "$@"
+    }
+    
+    main "$@"

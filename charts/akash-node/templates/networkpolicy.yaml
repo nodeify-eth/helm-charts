@@ -1,0 +1,66 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "cosmos-node.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "cosmos-node.labels" . | nindent 4 }}
+  {{- with (include "cosmos-node.commonAnnotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "cosmos-node.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow P2P traffic from anywhere
+    - from: []
+      ports:
+        - protocol: TCP
+          port: {{ .Values.chain.ports.p2p }}
+    # Allow RPC/API/gRPC from within cluster
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.chain.ports.rpc }}
+        - protocol: TCP
+          port: {{ .Values.chain.ports.grpc }}
+        - protocol: TCP
+          port: {{ .Values.chain.ports.api }}
+        {{- if .Values.daemon.monitoring.prometheus }}
+        - protocol: TCP
+          port: {{ .Values.chain.ports.prometheus }}
+        {{- end }}
+    {{- with .Values.networkPolicy.ingress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  egress:
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow HTTPS for downloading bootstrap files
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+    # Allow P2P connections to anywhere
+    - to: []
+      ports:
+        - protocol: TCP
+          port: {{ .Values.chain.ports.p2p }}
+    {{- with .Values.networkPolicy.egress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

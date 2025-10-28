@@ -1,0 +1,231 @@
+{{- include "cosmos-node.validateChain" . -}}
+{{- include "cosmos-node.validatePersistence" . -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "cosmos-node.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "cosmos-node.labels" . | nindent 4 }}
+  {{- with (include "cosmos-node.commonAnnotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: 1
+  serviceName: {{ include "cosmos-node.fullname" . }}-headless
+  selector:
+    matchLabels:
+      {{- include "cosmos-node.selectorLabels" . | nindent 6 }}
+  {{- with .Values.strategy }}
+  updateStrategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "cosmos-node.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- include "cosmos-node.podAnnotations" . | nindent 8 }}
+    spec:
+      {{- include "cosmos-node.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ include "cosmos-node.serviceAccountName" . }}
+      {{- with (include "cosmos-node.priorityClassName" .) }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- with .Values.runtimeClassName }}
+      runtimeClassName: {{ . }}
+      {{- end }}
+      securityContext:
+        {{- include "cosmos-node.podSecurityContext" . | nindent 8 }}
+      terminationGracePeriodSeconds: 300
+      initContainers:
+        - name: init-chain
+          image: {{ include "cosmos-node.initImage" . }}
+          imagePullPolicy: {{ .Values.initContainer.image.pullPolicy }}
+          command:
+            - /scripts/init.sh
+          env:
+            - name: CHAIN_NAME
+              value: {{ .Values.chain.name | quote }}
+            - name: CHAIN_ID
+              value: {{ .Values.chain.chainId | quote }}
+            - name: DAEMON_NAME
+              value: {{ .Values.chain.daemon | quote }}
+            - name: CHAIN_HOME
+              value: {{ include "cosmos-node.homePath" . | quote }}
+            - name: GENESIS_URL
+              value: {{ include "cosmos-node.genesisUrl" . | quote }}
+            - name: ADDRBOOK_URL
+              value: {{ include "cosmos-node.addrbookUrl" . | quote }}
+            {{- if .Values.bootstrap.seeds.list }}
+            - name: SEEDS_LIST
+              value: {{ include "cosmos-node.seedsList" . | quote }}
+            {{- end }}
+            {{- if .Values.bootstrap.snapshot.enabled }}
+            - name: SNAPSHOT_ENABLED
+              value: "true"
+            - name: SNAPSHOT_SOURCE
+              value: {{ include "cosmos-node.snapshotSource" . | quote }}
+            - name: SNAPSHOT_TIMEOUT
+              value: {{ .Values.bootstrap.snapshot.timeout | quote }}
+            {{- end }}
+            {{- if .Values.bootstrap.stateSync.enabled }}
+            - name: STATE_SYNC_ENABLED
+              value: "true"
+            - name: STATE_SYNC_RPC
+              value: {{ .Values.bootstrap.stateSync.rpcServer | quote }}
+            - name: STATE_SYNC_HEIGHT_OFFSET
+              value: {{ .Values.bootstrap.stateSync.trustHeightOffset | quote }}
+            {{- end }}
+          securityContext:
+            # Override pod security context for init container to install packages
+            runAsUser: 0
+            runAsGroup: 0
+            runAsNonRoot: false
+            allowPrivilegeEscalation: true
+          volumeMounts:
+            - name: data
+              mountPath: {{ include "cosmos-node.homePath" . }}
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            {{- toYaml .Values.initContainer.resources | nindent 12 }}
+        {{- with .Values.extraInitContainers }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ include "cosmos-node.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /scripts/entrypoint.sh
+          args:
+            {{- include "cosmos-node.daemonCommand" . | nindent 12 }}
+          env:
+            - name: HOME
+              value: {{ include "cosmos-node.homePath" . | quote }}
+            - name: CHAIN_ID
+              value: {{ .Values.chain.chainId | quote }}
+            - name: DAEMON_NAME
+              value: {{ .Values.chain.daemon | quote }}
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: p2p
+              containerPort: {{ .Values.chain.ports.p2p }}
+              protocol: TCP
+            - name: rpc
+              containerPort: {{ .Values.chain.ports.rpc }}
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ .Values.chain.ports.grpc }}
+              protocol: TCP
+            - name: api
+              containerPort: {{ .Values.chain.ports.api }}
+              protocol: TCP
+            {{- if .Values.daemon.monitoring.prometheus }}
+            - name: prometheus
+              containerPort: {{ .Values.chain.ports.prometheus }}
+              protocol: TCP
+            {{- end }}
+          {{- with (include "cosmos-node.startupProbe" .) }}
+          startupProbe:
+            {{- . | nindent 12 }}
+          {{- end }}
+          {{- with (include "cosmos-node.livenessProbe" .) }}
+          livenessProbe:
+            {{- . | nindent 12 }}
+          {{- end }}
+          {{- with (include "cosmos-node.readinessProbe" .) }}
+          readinessProbe:
+            {{- . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "cosmos-node.securityContext" . | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ include "cosmos-node.homePath" . }}
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- with .Values.extraContainers }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ include "cosmos-node.fullname" . }}-scripts
+            defaultMode: 0755
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "cosmos-node.labels" . | nindent 10 }}
+        {{- with .Values.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode }}
+        {{- if .Values.persistence.storageClass }}
+        {{- if eq "-" .Values.persistence.storageClass }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: {{ .Values.persistence.storageClass | quote }}
+        {{- end }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+        {{- with .Values.persistence.selector }}
+        selector:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+  {{- end }}

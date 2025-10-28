@@ -1,0 +1,399 @@
+# Default values for cosmos-node.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Global configuration
+global:
+  # -- Global image registry
+  imageRegistry: ""
+  # -- Global image pull secrets
+  imagePullSecrets: []
+
+# -- Chain-specific configuration
+chain:
+  # -- Chain identifier (used for directory names, genesis URLs, etc.)
+  name: "akash"
+  # -- Chain ID for the network
+  chainId: "akashnet-2"
+  # -- Daemon binary name (e.g., gaiad, osmosisd, junod, etc.)
+  daemon: "akash"
+  # -- Home directory name (e.g., .gaia, .osmosisd, .juno, etc.)
+  home: ".akash"
+  # -- Default minimum gas prices
+  minGasPrices: "0.0025uakt"
+  # -- Base denomination
+  denom: "uakt"
+  # -- Chain-specific ports
+  ports:
+    # -- P2P port
+    p2p: 26656
+    # -- RPC port
+    rpc: 26657
+    # -- gRPC port
+    grpc: 9090
+    # -- API port
+    api: 1317
+    # -- Prometheus metrics port
+    prometheus: 26660
+
+# -- Image configuration
+image:
+  # -- Image registry
+  registry: ""
+  # -- Image repository
+  repository: "ghcr.io/akash-network/node"
+  # -- Image tag (overrides the image tag whose default is the chart appVersion)
+  tag: ""
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Image pull secrets
+  pullSecrets: []
+
+# -- Init container configuration
+initContainer:
+  # -- Init container image
+  image:
+    registry: ""
+    repository: "alpine"
+    tag: "3.22"
+    pullPolicy: IfNotPresent
+  # -- Init container resources
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+# -- Bootstrap configuration
+bootstrap:
+  # -- Genesis configuration
+  genesis:
+    # -- Genesis file URL (required if enabled)
+    url: "https://snapshots.polkachu.com/genesis/akash/genesis.json"
+    # -- Genesis checksum for verification
+    checksum: ""
+  
+  # -- Address book configuration
+  addrbook:
+    # -- Address book URL (required if enabled)
+    url: "https://snapshots.polkachu.com/addrbook/akash/addrbook.json"
+    # -- Update interval in minutes
+    updateInterval: 60
+  
+  # -- Seeds configuration
+  seeds:
+    # -- Seeds list (comma-separated peer addresses)
+    # Example: "ade4d8bc8cbe014af6ebdf3cb7b1e9ad36f412c0@seeds.polkachu.com:14956,20e1000e88125698264454a884812746c2eb4807@seeds.beispiel.com:26656"
+    list: "ade4d8bc8cbe014af6ebdf3cb7b1e9ad36f412c0@seeds.polkachu.com:12856"
+  
+  # -- Snapshot configuration
+  snapshot:
+    # -- Enable snapshot download
+    enabled: true
+    # -- Direct snapshot URL (e.g., "https://example.com/snapshot.tar.lz4")
+    url: ""
+    # -- Custom command to get snapshot URL (requires curl and jq packages)
+    command: ""
+    # -- Snapshot download timeout in minutes
+    timeout: 60
+    # -- Verify snapshot integrity
+    verify: true
+
+  # -- State sync configuration (alternative to snapshot)
+  stateSync:
+    # -- Enable state sync
+    enabled: false
+    # -- RPC server for state sync
+    rpcServer: "https://akash-rpc.polkachu.com:443"
+    # -- Trust height offset from latest (default: 2000 blocks back)
+    trustHeightOffset: 2000
+
+# -- Service account configuration
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Automatically mount a ServiceAccount's API credentials
+  automount: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- RBAC configuration
+rbac:
+  # -- Create RBAC resources
+  create: true
+  # -- Rules for the RBAC
+  rules: []
+
+# -- Network policy configuration
+networkPolicy:
+  # -- Enable network policy
+  enabled: false
+  # -- Additional ingress rules
+  ingress: []
+  # -- Additional egress rules
+  egress: []
+
+# -- Pod security context
+podSecurityContext:
+  # -- Run as non-root user
+  runAsNonRoot: true
+  # -- User ID to run the entrypoint
+  runAsUser: 1000
+  # -- Group ID to run the entrypoint
+  runAsGroup: 1000
+  # -- File system group
+  fsGroup: 1000
+  # -- Enable fsGroupChangePolicy
+  fsGroupChangePolicy: "OnRootMismatch"
+  # -- Seccomp profile
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Container security context
+securityContext:
+  # -- Allow privilege escalation
+  allowPrivilegeEscalation: false
+  # -- Capabilities to drop
+  capabilities:
+    drop:
+      - ALL
+  # -- Read-only root filesystem
+  readOnlyRootFilesystem: false
+  # -- Run as non-root
+  runAsNonRoot: true
+  # -- User ID
+  runAsUser: 1000
+  # -- Group ID
+  runAsGroup: 1000
+
+# -- Daemon configuration
+daemon:
+  # -- Additional command line flags
+  flags: []
+  # -- Monitoring configuration
+  monitoring:
+    # -- Enable Prometheus metrics
+    prometheus: true
+    # -- Metrics bind address
+    address: "0.0.0.0:26660"
+
+# -- Persistence configuration
+persistence:
+  # -- Enable persistence
+  enabled: true
+  # -- Storage class name
+  storageClass: ""
+  # -- Access mode
+  accessMode: ReadWriteOnce
+  # -- Storage size
+  size: 250Gi
+  # -- Annotations for PVC
+  annotations: {}
+  # -- Selector for PVC
+  selector: {}
+
+# -- Service configuration
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- Service annotations
+  annotations: {}
+  # -- Load balancer IP
+  loadBalancerIP: ""
+  # -- Load balancer source ranges
+  loadBalancerSourceRanges: []
+  # -- External traffic policy
+  externalTrafficPolicy: ""
+  # -- Port configuration
+  ports:
+    # -- P2P service port
+    p2p:
+      port: 26656
+      protocol: TCP
+      nodePort: ""
+    # -- RPC service port
+    rpc:
+      port: 26657
+      protocol: TCP
+      nodePort: ""
+    # -- gRPC service port
+    grpc:
+      port: 9090
+      protocol: TCP
+      nodePort: ""
+    # -- API service port
+    api:
+      port: 1317
+      protocol: TCP
+      nodePort: ""
+    # -- Prometheus metrics port
+    prometheus:
+      port: 26660
+      protocol: TCP
+      nodePort: ""
+
+# -- Ingress configuration
+ingress:
+  # -- Enable ingress
+  enabled: false
+  # -- Ingress class name
+  className: ""
+  # -- Ingress annotations
+  annotations: {}
+  # -- Ingress hosts configuration
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: rpc
+              port: 26657
+  # -- Ingress TLS configuration
+  tls: []
+
+# -- Resource limits and requests
+resources:
+  # -- Resource limits
+  limits:
+    # cpu: 8
+    memory: 48Gi
+  # -- Resource requests
+  requests:
+    cpu: 2
+    memory: 8Gi
+
+# -- Horizontal Pod Autoscaler configuration
+autoscaling:
+  # -- Enable HPA
+  enabled: false
+  # -- Minimum replicas
+  minReplicas: 1
+  # -- Maximum replicas
+  maxReplicas: 3
+  # -- Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 80
+  # -- Target memory utilization percentage
+  targetMemoryUtilizationPercentage: 80
+
+# -- Health check configuration
+healthChecks:
+  # -- Startup probe configuration
+  startup:
+    # -- Enable startup probe
+    enabled: true
+    # -- Initial delay seconds
+    initialDelaySeconds: 30
+    # -- Period seconds
+    periodSeconds: 30
+    # -- Timeout seconds
+    timeoutSeconds: 10
+    # -- Success threshold
+    successThreshold: 1
+    # -- Failure threshold
+    failureThreshold: 600
+  
+  # -- Liveness probe configuration
+  liveness:
+    # -- Enable liveness probe
+    enabled: true
+    # -- Initial delay seconds
+    initialDelaySeconds: 60
+    # -- Period seconds
+    periodSeconds: 30
+    # -- Timeout seconds
+    timeoutSeconds: 10
+    # -- Success threshold
+    successThreshold: 1
+    # -- Failure threshold
+    failureThreshold: 3
+  
+  # -- Readiness probe configuration
+  readiness:
+    # -- Enable readiness probe
+    enabled: true
+    # -- Initial delay seconds
+    initialDelaySeconds: 30
+    # -- Period seconds
+    periodSeconds: 10
+    # -- Timeout seconds
+    timeoutSeconds: 5
+    # -- Success threshold
+    successThreshold: 1
+    # -- Failure threshold
+    failureThreshold: 3
+
+# -- Node selector
+nodeSelector: {}
+
+# -- Tolerations
+tolerations: []
+
+# -- Affinity and anti-affinity
+affinity: {}
+
+# -- Pod disruption budget
+podDisruptionBudget:
+  # -- Enable PDB
+  enabled: false
+  # -- Minimum available pods
+  minAvailable: 1
+  # -- Maximum unavailable pods
+  maxUnavailable: ""
+
+# -- Pod annotations
+podAnnotations: {}
+
+# -- Pod labels
+podLabels: {}
+
+# -- Deployment strategy
+strategy: {}
+
+# -- Priority class name
+priorityClassName: ""
+
+# -- Topology spread constraints
+topologySpreadConstraints: []
+
+# -- Runtime class name
+runtimeClassName: ""
+
+# -- Additional volumes
+extraVolumes: []
+
+# -- Additional volume mounts
+extraVolumeMounts: []
+
+# -- Additional containers
+extraContainers: []
+
+# -- Additional init containers
+extraInitContainers: []
+
+# -- Environment variables
+env: []
+
+# -- Environment variables from secrets/configmaps
+envFrom: []
+
+# -- Lifecycle hooks
+lifecycle: {}
+
+# -- Name override
+nameOverride: ""
+
+# -- Full name override
+fullnameOverride: ""
+
+# -- Common labels
+commonLabels: {}
+
+# -- Common annotations
+commonAnnotations: {}

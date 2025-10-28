@@ -1,0 +1,26 @@
+apiVersion: v2
+name: cosmos-node
+description: A professional, production-ready Helm chart for deploying Cosmos SDK blockchain nodes with enterprise-grade features
+type: application
+version: 1.0.0
+appVersion: "v1.0.0"
+maintainers:
+  - name: vince
+    email: vince@nodeify.net
+    url: https://nodeify.net
+keywords:
+  - akash
+  - blockchain
+  - cosmos-sdk
+  - validator
+  - rpc
+  - node
+  - statefulset
+  - persistence
+annotations:
+  category: "Blockchain"
+  licenses: "Apache-2.0"
+home: https://cosmos.network
+sources:
+  - https://github.com/cosmos/cosmos-sdk
+  - https://github.com/akash-network/node
