@@ -1,5 +1,37 @@
 apiVersion: v1
 entries:
+  akash-node:
+  - annotations:
+      category: Blockchain
+      licenses: Apache-2.0
+    apiVersion: v2
+    appVersion: v1.0.0
+    created: "2025-10-28T17:22:30.372097876Z"
+    description: A professional, production-ready Helm chart for deploying Cosmos
+      SDK blockchain nodes with enterprise-grade features
+    digest: 84ef38a09238ad996ccd4ed92262aaf9dc921c0ab471d72a4a768eda41103b1e
+    home: https://cosmos.network
+    keywords:
+    - akash
+    - blockchain
+    - cosmos-sdk
+    - validator
+    - rpc
+    - node
+    - statefulset
+    - persistence
+    maintainers:
+    - email: vince@nodeify.net
+      name: vince
+      url: https://nodeify.net
+    name: akash-node
+    sources:
+    - https://github.com/cosmos/cosmos-sdk
+    - https://github.com/akash-network/node
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/akash-node-1.0.0/akash-node-1.0.0.tgz
+    version: 1.0.0
   cosmos-node:
   - annotations:
       category: Blockchain
@@ -1125,4 +1157,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-tier-2-1.0.0/substreams-tier-2-1.0.0.tgz
     version: 1.0.0
-generated: "2025-10-28T17:20:54.007319846Z"
+generated: "2025-10-28T17:22:30.372199015Z"
