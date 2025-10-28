@@ -593,6 +593,37 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/cosmos-node-2.0.0/cosmos-node-2.0.0.tgz
     version: 2.0.0
+  - annotations:
+      category: Blockchain
+      licenses: Apache-2.0
+    apiVersion: v2
+    appVersion: v1.0.0
+    created: "2025-10-28T17:20:54.007212475Z"
+    description: A professional, production-ready Helm chart for deploying Cosmos
+      SDK blockchain nodes with enterprise-grade features
+    digest: b93b715aa031a2d990cea350e6b6f2eadc5251b8f6a103a4775c2f8f107fcb51
+    home: https://cosmos.network
+    keywords:
+    - akash
+    - blockchain
+    - cosmos-sdk
+    - validator
+    - rpc
+    - node
+    - statefulset
+    - persistence
+    maintainers:
+    - email: vince@nodeify.net
+      name: vince
+      url: https://nodeify.net
+    name: cosmos-node
+    sources:
+    - https://github.com/cosmos/cosmos-sdk
+    - https://github.com/akash-network/node
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/cosmos-node-1.0.0/cosmos-node-1.0.0.tgz
+    version: 1.0.0
   cosmoshub-rpc:
   - annotations:
       lookupName: ghcr.io/cosmos/gaia
@@ -1094,4 +1125,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-tier-2-1.0.0/substreams-tier-2-1.0.0.tgz
     version: 1.0.0
-generated: "2025-10-25T19:13:14.187618299Z"
+generated: "2025-10-28T17:20:54.007319846Z"
