@@ -124,7 +124,7 @@ fullMode:
       image:
         repository: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node
         pullPolicy: IfNotPresent
-        tag: "1.14.3"
+        tag: "1.16.0"
 
       # -- OP Node configuration
       config:
