@@ -6,7 +6,7 @@ fullnameOverride: ""
 
 image:
   # -- Image for Firehose
-  repository: ghcr.io/streamingfast/firehose-ethereum
+  repository: ghcr.io/streamingfast/go-ethereum
   pullPolicy: IfNotPresent
   # -- Overrides the image tag
   # @default -- Chart.appVersion
@@ -122,9 +122,9 @@ fullMode:
 
       # -- Image configuration for OP Node
       image:
-        repository: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node
+        repository: ghcr.io/streamingfast/go-ethereum
         pullPolicy: IfNotPresent
-        tag: "1.14.3"
+        tag: "optimism-v1.101603.1"
 
       # -- OP Node configuration
       config:
