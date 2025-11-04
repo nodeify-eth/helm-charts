@@ -41,7 +41,7 @@ spec:
         - name: firehose
           image: {{ $.Values.image.repository }}:{{ default $.Chart.AppVersion $.Values.image.tag }}
           imagePullPolicy: {{ $ctx.Values.image.pullPolicy }}
-          command: fireeth
+          command: ["fireeth"]
           args: ["start", "-c", "/config/chunk-{{ $i }}.yaml"]
           {{- include "firehose-ethereum.envVars" (dict "context" $ctx "component" $values.components.remoteFirehose) | nindent 10 }}
           ports:
