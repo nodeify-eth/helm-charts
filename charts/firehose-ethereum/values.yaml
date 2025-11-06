@@ -71,7 +71,7 @@ fullMode:
       image:
         repository: sigp/lighthouse
         pullPolicy: IfNotPresent
-        tag: "v7.1.0"
+        tag: "v8.0.0"
 
       # -- Lighthouse beacon node configuration
       config:
