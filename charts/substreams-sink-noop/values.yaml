@@ -4,7 +4,7 @@
 
 # Image configuration
 image:
-  repository: streamingfast/substreams-sink-noop
+  repository: ghcr.io/streamingfast/substreams
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -89,6 +89,17 @@ substreams_sink_noop:
   #     mountPath: /mnt/spkg
   #     readOnly: true
   volumeMounts: []
+  
+  # Init containers to run before the main container
+  # Example:
+  # initContainers:
+  #   - name: init-setup
+  #     image: busybox:latest
+  #     command: ['sh', '-c', 'echo "Initializing..." && sleep 5']
+  #     volumeMounts:
+  #       - name: state-storage
+  #         mountPath: /app/state
+  initContainers: []
   
   # Resource configuration - leave empty by default
   resources: {}

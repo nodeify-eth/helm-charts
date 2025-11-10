@@ -2,8 +2,8 @@ apiVersion: v2
 name: substreams-sink-noop
 description: A Helm chart for Substreams Sink Noop
 type: application
-version: 1.1.0
-appVersion: "v1.4.0"
+version: 2.0.0
+appVersion: "edge"
 maintainers:
   - name: vince
     email: vince@nodeify.net

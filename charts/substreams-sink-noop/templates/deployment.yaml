@@ -35,6 +35,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       terminationGracePeriodSeconds: {{ $values.terminationGracePeriodSeconds | default "60" }}
+      {{- with $values.initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- if or $values.volumeClaimSpec.enabled $values.volumes }}
       volumes:
         {{- if $values.volumeClaimSpec.enabled }}
@@ -76,9 +80,6 @@ spec:
             {{- else }}
             {{- fail "substreams_sink_noop.config.module is required" }}
             {{- end }}
-            {{- if $values.volumeClaimSpec.enabled }}
-            - "--state-store=./state/state.yaml"
-            {{- end }}
             {{- range $arg := $values.extraArgs }}
             - {{ $arg }}
             {{- end }}
@@ -108,7 +109,7 @@ spec:
           volumeMounts:
             {{- if $values.volumeClaimSpec.enabled }}
             - name: state-storage
-              mountPath: /app/state
+              mountPath: /app
             {{- end }}
             {{- with $values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
