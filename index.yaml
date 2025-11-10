@@ -1193,6 +1193,26 @@ entries:
   substreams-sink-noop:
   - apiVersion: v2
     appVersion: edge
+    created: "2025-11-10T18:10:54.781565952Z"
+    description: A Helm chart for Substreams Sink Noop
+    digest: 5a35a9282ec055e163e738580b9b8d1dab54e72e05f89b0cb33f721e6a5819c2
+    home: https://nodeify.net
+    keywords:
+    - substreams
+    - noop
+    - substreams-sink
+    maintainers:
+    - email: vince@nodeify.net
+      name: vince
+    name: substreams-sink-noop
+    sources:
+    - https://github.com/streamingfast/substreams-sink-noop
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-sink-noop-2.1.0/substreams-sink-noop-2.1.0.tgz
+    version: 2.1.0
+  - apiVersion: v2
+    appVersion: edge
     created: "2025-11-10T18:04:47.599018743Z"
     description: A Helm chart for Substreams Sink Noop
     digest: 693d402eee205bc5abf78b52cee3762f69d9c4743dec86eb75a4d90710865de7
@@ -1267,4 +1287,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-tier-2-1.0.0/substreams-tier-2-1.0.0.tgz
     version: 1.0.0
-generated: "2025-11-10T18:04:47.599164083Z"
+generated: "2025-11-10T18:10:54.781706253Z"
