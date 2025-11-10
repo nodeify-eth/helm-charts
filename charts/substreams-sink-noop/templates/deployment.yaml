@@ -67,11 +67,6 @@ spec:
           args:
             - sink
             - noop
-            {{- if ne $values.config.endpoint "" }}
-            - {{ $values.config.endpoint }}
-            {{- else }}
-            {{- fail "substreams_sink_noop.config.endpoint is required" }}
-            {{- end }}
             {{- if ne $values.config.manifest "" }}
             - {{ $values.config.manifest }}
             {{- else }}
@@ -81,6 +76,11 @@ spec:
             - {{ $values.config.module }}
             {{- else }}
             {{- fail "substreams_sink_noop.config.module is required" }}
+            {{- end }}
+            {{- if ne $values.config.endpoint "" }}
+            - --endpoint={{ $values.config.endpoint }}
+            {{- else }}
+            {{- fail "substreams_sink_noop.config.endpoint is required" }}
             {{- end }}
             {{- range $arg := $values.extraArgs }}
             - {{ $arg }}
