@@ -70,6 +70,7 @@ substreams_sink_noop:
     enabled: false
     accessModes:
       - ReadWriteOnce
+    storageClassName: ""
     resources:
       requests:
         storage: 1Gi

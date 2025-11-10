@@ -82,6 +82,9 @@ spec:
             {{- else }}
             {{- fail "substreams_sink_noop.config.endpoint is required" }}
             {{- end }}
+            {{- if $values.volumeClaimSpec.enabled }}
+            - --state-file=/data/state.cursor
+            {{- end }}
             {{- range $arg := $values.extraArgs }}
             - {{ $arg }}
             {{- end }}
@@ -111,7 +114,7 @@ spec:
           volumeMounts:
             {{- if $values.volumeClaimSpec.enabled }}
             - name: state-storage
-              mountPath: /app
+              mountPath: /data
             {{- end }}
             {{- with $values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
