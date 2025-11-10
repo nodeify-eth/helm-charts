@@ -65,6 +65,8 @@ spec:
           image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ $.Values.image.pullPolicy }}
           args:
+            - sink
+            - noop
             {{- if ne $values.config.endpoint "" }}
             - {{ $values.config.endpoint }}
             {{- else }}
