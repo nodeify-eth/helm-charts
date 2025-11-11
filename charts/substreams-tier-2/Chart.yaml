@@ -2,8 +2,8 @@ apiVersion: v2
 name: substreams-tier-2
 description: A Helm chart for deploying substreams-tier-2
 type: application
-version: 1.0.0
-appVersion: v2.12.4
+version: 1.1.0
+appVersion: v2.14.1
 keywords:
   - substreams-tier-2
   - firehose-ethereum
