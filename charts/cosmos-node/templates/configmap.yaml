@@ -276,6 +276,17 @@ data:
                         return 0
                     fi
                     ;;
+                *.tar.zst)
+                    log "Extracting Zstandard compressed tar file..." "$BLUE"
+                    if tar -I zstd -xf "$snapshot_file"; then
+                        log "Snapshot extracted successfully" "$GREEN"
+                        extraction_success=true
+                    else
+                        log "Failed to extract zstd snapshot, continuing without it" "$YELLOW"
+                        rm -f "$snapshot_file"
+                        return 0
+                    fi
+                    ;;
                 *.tar.gz|*.tgz)
                     log "Extracting gzipped tar file..." "$BLUE"
                     if tar -xzf "$snapshot_file"; then
@@ -300,7 +311,17 @@ data:
                     ;;
                 *)
                     log "Unknown snapshot format: $snapshot_file" "$YELLOW"
-                    if file "$snapshot_file" | grep -q "LZ4"; then
+                    if file "$snapshot_file" | grep -qi "zstandard"; then
+                        log "Detected Zstandard file by content, attempting zstd extraction..." "$BLUE"
+                        if tar -I zstd -xf "$snapshot_file"; then
+                            log "Snapshot extracted successfully" "$GREEN"
+                            extraction_success=true
+                        else
+                            log "Failed to extract detected zstd file, continuing without it" "$YELLOW"
+                            rm -f "$snapshot_file"
+                            return 0
+                        fi
+                    elif file "$snapshot_file" | grep -q "LZ4"; then
                         log "Detected LZ4 file by content, attempting LZ4 extraction..." "$BLUE"
                         if lz4 -d "$snapshot_file" --stdout | tar -xf -; then
                             log "Snapshot extracted successfully" "$GREEN"
@@ -455,7 +476,7 @@ data:
         
         # Install required packages only when initializing
         log "Installing required packages..." "$BLUE"
-        apk add --no-cache wget curl jq tar lz4
+        apk add --no-cache wget curl jq tar lz4 zstd
         
         if [ "${STATE_SYNC_ENABLED:-false}" = "true" ] && [ "${SNAPSHOT_ENABLED:-false}" = "true" ]; then
             log "ERROR: Cannot enable both snapshot and state sync - choose one" "$RED"
