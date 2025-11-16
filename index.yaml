@@ -1179,6 +1179,30 @@ entries:
   horcrux:
   - apiVersion: v2
     appVersion: v3.3.2
+    created: "2025-11-16T22:13:19.458458025Z"
+    description: A production-grade Helm chart for deploying Horcrux remote signer
+      for Cosmos chains
+    digest: 9f0b31c3a053dfd33785851a387f393c7b285cff56b681a5f4114d5abd550b8e
+    home: https://github.com/strangelove-ventures/horcrux
+    icon: https://avatars.githubusercontent.com/u/87437622?s=200&v=4
+    keywords:
+    - cosmos
+    - horcrux
+    - validator
+    - remote-signer
+    - blockchain
+    maintainers:
+    - name: Horcrux Team
+      url: https://github.com/strangelove-ventures/horcrux
+    name: horcrux
+    sources:
+    - https://github.com/strangelove-ventures/horcrux
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/horcrux-1.0.5/horcrux-1.0.5.tgz
+    version: 1.0.5
+  - apiVersion: v2
+    appVersion: v3.3.2
     created: "2025-11-16T21:38:08.091284006Z"
     description: A production-grade Helm chart for deploying Horcrux remote signer
       for Cosmos chains
@@ -1530,4 +1554,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-tier-2-1.0.0/substreams-tier-2-1.0.0.tgz
     version: 1.0.0
-generated: "2025-11-16T21:38:08.091421463Z"
+generated: "2025-11-16T22:13:19.458617615Z"
