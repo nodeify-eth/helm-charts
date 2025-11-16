@@ -28,7 +28,7 @@ fullnameOverride: ""
 # -- Chain configuration
 chain:
   # -- Chain identifier (e.g., cosmoshub, osmosis, juno)
-  id: "cosmoshub"
+  id: "cosmoshub-4"
   # -- Chain environment (e.g., mainnet, testnet)
   environment: "mainnet"
 
