@@ -101,7 +101,7 @@ securityContext:
 initContainer:
   image:
     repository: busybox
-    tag: "1.36"
+    tag: "1.37"
     pullPolicy: IfNotPresent
 
 # -- Resource limits and requests
