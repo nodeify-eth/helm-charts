@@ -56,6 +56,10 @@ spec:
           cp /horcrux/shards/shard-${SHARD_ID}/{{ .Values.chain.id }}_shard.json /shard-files/{{ .Values.chain.id }}_shard.json
           cp /horcrux/shards/shard-${SHARD_ID}/ecies_keys.json /shard-files/ecies_keys.json
 
+          # Generate config.yaml with correct shardID injected at the top
+          echo "shardID: ${SHARD_ID}" > /shard-files/config.yaml
+          cat /config-template/config.yaml >> /shard-files/config.yaml
+
           # Initialize state if it doesn't exist
           if [ ! -f /horcrux/state/{{ .Values.chain.id }}_priv_validator_state.json ]; then
             echo "Initializing state from shard..."
@@ -79,6 +83,9 @@ spec:
           mountPath: /shard-files
         - name: raft
           mountPath: /horcrux/raft
+        - name: config
+          mountPath: /config-template
+          readOnly: true
         {{- with .Values.securityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}
@@ -115,7 +122,7 @@ spec:
         volumeMounts:
         - name: horcrux-home
           mountPath: /horcrux
-        - name: config
+        - name: shard-files
           mountPath: /horcrux/config.yaml
           subPath: config.yaml
         - name: shard-files
