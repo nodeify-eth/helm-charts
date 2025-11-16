@@ -2,7 +2,7 @@ apiVersion: v2
 name: horcrux
 description: A production-grade Helm chart for deploying Horcrux remote signer for Cosmos chains
 type: application
-version: 2.0.0
+version: 1.0.0
 appVersion: "3.3.2"
 keywords:
   - cosmos
