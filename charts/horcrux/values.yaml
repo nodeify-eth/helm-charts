@@ -79,7 +79,8 @@ service:
     annotations: {}
 
 # -- Pod management policy: "OrderedReady" or "Parallel"
-podManagementPolicy: Parallel
+# IMPORTANT: Must be "OrderedReady" for Horcrux to ensure pods join raft cluster in correct order
+podManagementPolicy: OrderedReady
 
 # -- Security context for pods
 podSecurityContext:

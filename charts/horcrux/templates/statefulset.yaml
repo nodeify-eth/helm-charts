@@ -56,7 +56,7 @@ spec:
           cp /horcrux/shards/shard-${SHARD_ID}/{{ .Values.chain.id }}_shard.json /shard-files/{{ .Values.chain.id }}_shard.json
           cp /horcrux/shards/shard-${SHARD_ID}/ecies_keys.json /shard-files/ecies_keys.json
 
-          # Generate config.yaml with correct shardID injected at the top
+          # Copy config.yaml
           cp /config-template/config.yaml /shard-files/config.yaml
 
           # Initialize state if it doesn't exist
