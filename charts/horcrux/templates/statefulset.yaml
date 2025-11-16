@@ -57,8 +57,7 @@ spec:
           cp /horcrux/shards/shard-${SHARD_ID}/ecies_keys.json /shard-files/ecies_keys.json
 
           # Generate config.yaml with correct shardID injected at the top
-          echo "shardID: ${SHARD_ID}" > /shard-files/config.yaml
-          cat /config-template/config.yaml >> /shard-files/config.yaml
+          cp /config-template/config.yaml /shard-files/config.yaml
 
           # Initialize state if it doesn't exist
           if [ ! -f /horcrux/state/{{ .Values.chain.id }}_priv_validator_state.json ]; then
