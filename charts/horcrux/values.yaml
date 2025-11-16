@@ -1,0 +1,353 @@
+# Default values for horcrux.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Global settings
+global:
+  # -- Namespace to deploy into (if not specified, uses release namespace)
+  namespace: ""
+
+# -- Number of Horcrux co-signer replicas (minimum 2, recommended 3 or more)
+replicaCount: 3
+
+# -- Horcrux image configuration
+image:
+  repository: ghcr.io/strangelove-ventures/horcrux
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion
+  tag: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- Override the name of the chart
+nameOverride: ""
+# -- Override the full name of the release
+fullnameOverride: ""
+
+# -- Chain configuration
+chain:
+  # -- Chain identifier (e.g., cosmoshub, osmosis, juno)
+  id: "cosmoshub"
+  # -- Chain environment (e.g., mainnet, testnet)
+  environment: "mainnet"
+
+# -- Horcrux signing configuration
+horcrux:
+  # -- Sign mode: "threshold" or "single"
+  signMode: threshold
+  
+  # -- Threshold mode configuration (only used when signMode is "threshold")
+  thresholdMode:
+    # -- Minimum number of signers required for threshold signing (must be <= replicaCount)
+    threshold: 2
+    # -- GRPC timeout for cosigner communication
+    grpcTimeout: 1000ms
+    # -- Raft consensus timeout
+    raftTimeout: 1000ms
+  
+  # -- Debug server address (used for health checks and metrics)
+  debugAddr: "0.0.0.0:2345"
+  
+  # -- GRPC server address (empty string disables)
+  grpcAddr: ""
+  
+  # -- Chain nodes configuration
+  chainNodes:
+    - privValAddr: tcp://node-0.node-service.default.svc.cluster.local:1234
+    # Add more nodes as needed:
+    # - privValAddr: tcp://node-1.node-service.default.svc.cluster.local:1234
+  
+  # -- Additional configuration options (merged into config.yaml)
+  extraConfig: {}
+
+# -- Service configuration
+service:
+  # -- Headless service for StatefulSet pod discovery
+  headless:
+    enabled: true
+    type: ClusterIP
+    # -- P2P port for cosigner communication
+    p2pPort: 2222
+    annotations: {}
+  
+  # -- Metrics service configuration
+  metrics:
+    enabled: true
+    type: ClusterIP
+    port: 2345
+    annotations: {}
+
+# -- Pod management policy: "OrderedReady" or "Parallel"
+podManagementPolicy: Parallel
+
+# -- Security context for pods
+podSecurityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsNonRoot: true
+
+# -- Security context for containers
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# -- Init container configuration
+initContainer:
+  image:
+    repository: busybox
+    tag: "1.36"
+    pullPolicy: IfNotPresent
+
+# -- Resource limits and requests
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "500m"
+  limits:
+    memory: "2Gi"
+    cpu: "2"
+
+# -- Liveness probe configuration
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: debug
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+# -- Readiness probe configuration
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: debug
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+  successThreshold: 1
+
+# -- Startup probe configuration (useful for slow-starting pods)
+startupProbe:
+  enabled: false
+  httpGet:
+    path: /health
+    port: debug
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 30
+  successThreshold: 1
+
+# -- Node selector for pod assignment
+nodeSelector: {}
+
+# -- Tolerations for pod assignment
+tolerations: []
+
+# -- Affinity rules for pod assignment
+affinity: {}
+  # Example anti-affinity to spread pods across nodes:
+  # podAntiAffinity:
+  #   preferredDuringSchedulingIgnoredDuringExecution:
+  #   - weight: 100
+  #     podAffinityTerm:
+  #       labelSelector:
+  #         matchExpressions:
+  #         - key: app.kubernetes.io/name
+  #           operator: In
+  #           values:
+  #           - horcrux
+  #       topologyKey: kubernetes.io/hostname
+
+# -- Pod annotations
+podAnnotations: {}
+
+# -- Pod labels
+podLabels: {}
+
+# -- Priority class name for pod scheduling
+priorityClassName: ""
+
+# -- Termination grace period in seconds
+terminationGracePeriodSeconds: 30
+
+# -- Update strategy for StatefulSet
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate: {}
+
+# -- Persistent volume configuration for state storage
+persistence:
+  # -- Enable persistent storage for validator state
+  enabled: true
+  # -- Storage class name (use "-" for default, "" for no storage class)
+  storageClassName: ""
+  # -- Access mode
+  accessMode: ReadWriteOnce
+  # -- Storage size
+  size: 1Gi
+  # -- Annotations for PVCs
+  annotations: {}
+
+# -- Shard secrets configuration
+shards:
+  # -- Method to provide shard secrets: "secret" or "externalSecret"
+  method: secret
+  
+  # -- Direct Kubernetes secrets (used when method is "secret")
+  # Each shard must contain: provider_shard.json, ecies_keys.json, provider_priv_validator_state.json
+  secrets:
+    # -- Create secrets from values (NOT RECOMMENDED for production - use external secrets)
+    create: false
+    # -- Existing secret names (one per replica)
+    # IMPORTANT: You must create these secrets before installing the chart
+    existingSecrets:
+      - horcrux-shard-1
+      - horcrux-shard-2
+      - horcrux-shard-3
+  
+  # -- External Secrets Operator configuration (used when method is "externalSecret")
+  externalSecrets:
+    # -- Enable External Secrets
+    enabled: false
+    # -- Refresh interval for secrets
+    refreshInterval: 1h
+    # -- Secret store reference
+    secretStoreRef:
+      name: ""
+      kind: ClusterSecretStore
+    # -- Remote references for each shard
+    shardConfigs: []
+      # Example:
+      # - shardId: 1
+      #   providerShardKey: "uuid-for-provider-shard-1"
+      #   eciesKeysKey: "uuid-for-ecies-keys-1"
+      #   validatorStateKey: "uuid-for-validator-state"
+      # - shardId: 2
+      #   providerShardKey: "uuid-for-provider-shard-2"
+      #   eciesKeysKey: "uuid-for-ecies-keys-2"
+      #   validatorStateKey: "uuid-for-validator-state"
+
+# -- Monitoring configuration
+monitoring:
+  # -- Enable ServiceMonitor for Prometheus Operator
+  serviceMonitor:
+    enabled: false
+    # -- Scrape interval
+    interval: 30s
+    # -- Scrape timeout
+    scrapeTimeout: 10s
+    # -- Additional labels for ServiceMonitor
+    labels: {}
+    # -- Relabel configs
+    relabelings: []
+    # -- Metric relabel configs
+    metricRelabelings: []
+  
+  # -- Enable VMServiceScrape for VictoriaMetrics Operator
+  vmServiceScrape:
+    enabled: false
+    # -- Scrape interval
+    interval: 30s
+    # -- Scrape timeout
+    scrapeTimeout: 10s
+    # -- Additional labels for VMServiceScrape
+    labels: {}
+
+# -- ServiceAccount configuration
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- RBAC configuration
+rbac:
+  # -- Create RBAC resources
+  create: true
+
+# -- Network Policy configuration
+networkPolicy:
+  # -- Enable network policies
+  enabled: false
+  # -- Ingress rules
+  ingress: []
+  # -- Egress rules
+  egress: []
+
+# -- Pod Disruption Budget
+podDisruptionBudget:
+  # -- Enable PodDisruptionBudget
+  enabled: true
+  # -- Minimum available pods (use either minAvailable or maxUnavailable)
+  minAvailable: 2
+  # -- Maximum unavailable pods
+  # maxUnavailable: 1
+
+# -- Extra environment variables
+extraEnv: []
+  # - name: LOG_LEVEL
+  #   value: "debug"
+
+# -- Extra environment variables from ConfigMaps or Secrets
+extraEnvFrom: []
+  # - configMapRef:
+  #     name: extra-config
+  # - secretRef:
+  #     name: extra-secrets
+
+# -- Extra volumes
+extraVolumes: []
+  # - name: extra-config
+  #   configMap:
+  #     name: extra-config
+
+# -- Extra volume mounts
+extraVolumeMounts: []
+  # - name: extra-config
+  #   mountPath: /extra-config
+  #   readOnly: true
+
+# -- Extra init containers
+extraInitContainers: []
+  # - name: wait-for-service
+  #   image: busybox:1.36
+  #   command: ['sh', '-c', 'until nc -z service 8080; do sleep 1; done']
+
+# -- Extra containers (sidecars)
+extraContainers: []
+  # - name: sidecar
+  #   image: sidecar:latest
+  #   ports:
+  #   - containerPort: 8080
+
+# -- Command override
+command: []
+  # - horcrux
+  # - start
+  # - --home
+  # - /horcrux
+
+# -- Args override
+args: []
+
+# -- Lifecycle hooks
+lifecycle: {}
+  # preStop:
+  #   exec:
+  #     command: ["/bin/sh", "-c", "sleep 10"]
+

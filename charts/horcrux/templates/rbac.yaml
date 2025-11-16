@@ -1,0 +1,33 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "horcrux.fullname" . }}
+  namespace: {{ include "horcrux.namespace" . }}
+  labels:
+    {{- include "horcrux.labels" . | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "horcrux.fullname" . }}
+  namespace: {{ include "horcrux.namespace" . }}
+  labels:
+    {{- include "horcrux.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "horcrux.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "horcrux.serviceAccountName" . }}
+  namespace: {{ include "horcrux.namespace" . }}
+{{- end }}
+

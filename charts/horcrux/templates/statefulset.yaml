@@ -1,0 +1,224 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "horcrux.fullname" . }}
+  namespace: {{ include "horcrux.namespace" . }}
+  labels:
+    {{- include "horcrux.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "horcrux.serviceName" . }}
+  replicas: {{ .Values.replicaCount }}
+  podManagementPolicy: {{ .Values.podManagementPolicy }}
+  {{- with .Values.updateStrategy }}
+  updateStrategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "horcrux.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- include "horcrux.podAnnotations" . | nindent 8 }}
+      labels:
+        {{- include "horcrux.podLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "horcrux.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      initContainers:
+      {{- with .Values.extraInitContainers }}
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      - name: init-state
+        image: {{ include "horcrux.initImage" . }}
+        imagePullPolicy: {{ .Values.initContainer.image.pullPolicy }}
+        command:
+        - sh
+        - -c
+        - |
+          set -e
+          ORDINAL=${HOSTNAME##*-}
+          SHARD_ID=$((ORDINAL + 1))
+          echo "Initializing co-signer ${SHARD_ID}"
+          
+          # Copy shard files to emptyDir
+          cp /horcrux/shards/shard-${SHARD_ID}/provider_shard.json /shard-files/provider_shard.json
+          cp /horcrux/shards/shard-${SHARD_ID}/ecies_keys.json /shard-files/ecies_keys.json
+          
+          # Initialize state if it doesn't exist
+          if [ ! -f /horcrux/state/provider_priv_validator_state.json ]; then
+            echo "Initializing state from shard..."
+            cp /horcrux/shards/shard-${SHARD_ID}/provider_priv_validator_state.json /horcrux/state/
+            chmod 600 /horcrux/state/provider_priv_validator_state.json
+          else
+            echo "State already exists, skipping initialization"
+          fi
+          
+          # Create raft directory
+          mkdir -p /horcrux/raft
+          
+          echo "Initialization complete for shard ${SHARD_ID}"
+        volumeMounts:
+        - name: shards
+          mountPath: /horcrux/shards
+          readOnly: true
+        - name: state
+          mountPath: /horcrux/state
+        - name: shard-files
+          mountPath: /shard-files
+        - name: raft
+          mountPath: /horcrux/raft
+        {{- with .Values.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      containers:
+      - name: horcrux
+        image: {{ include "horcrux.image" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- if .Values.command }}
+        command:
+          {{- toYaml .Values.command | nindent 10 }}
+        {{- else }}
+        command: ["horcrux", "start", "--home", "/horcrux"]
+        {{- end }}
+        {{- with .Values.args }}
+        args:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        ports:
+        - name: p2p
+          containerPort: {{ .Values.service.headless.p2pPort }}
+          protocol: TCP
+        - name: debug
+          containerPort: 2345
+          protocol: TCP
+        {{- with .Values.extraEnv }}
+        env:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.extraEnvFrom }}
+        envFrom:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        volumeMounts:
+        - name: horcrux-home
+          mountPath: /horcrux
+        - name: config
+          mountPath: /horcrux/config.yaml
+          subPath: config.yaml
+        - name: shard-files
+          mountPath: /horcrux/provider_shard.json
+          subPath: provider_shard.json
+        - name: shard-files
+          mountPath: /horcrux/ecies_keys.json
+          subPath: ecies_keys.json
+        - name: state
+          mountPath: /horcrux/state
+        - name: raft
+          mountPath: /horcrux/raft
+        {{- with .Values.extraVolumeMounts }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- if .Values.livenessProbe.enabled }}
+        livenessProbe:
+          {{- omit .Values.livenessProbe "enabled" | toYaml | nindent 10 }}
+        {{- end }}
+        {{- if .Values.readinessProbe.enabled }}
+        readinessProbe:
+          {{- omit .Values.readinessProbe "enabled" | toYaml | nindent 10 }}
+        {{- end }}
+        {{- if .Values.startupProbe.enabled }}
+        startupProbe:
+          {{- omit .Values.startupProbe "enabled" | toYaml | nindent 10 }}
+        {{- end }}
+        {{- with .Values.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.lifecycle }}
+        lifecycle:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- with .Values.extraContainers }}
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "horcrux.configMapName" . }}
+      - name: shards
+        projected:
+          defaultMode: 0400
+          sources:
+          {{- range $i := until (int .Values.replicaCount) }}
+          {{- $shardId := add $i 1 }}
+          - secret:
+              name: {{ include "horcrux.shardSecretName" (dict "root" $ "shardId" $shardId) }}
+              items:
+              - key: provider_shard.json
+                path: shard-{{ $shardId }}/provider_shard.json
+              - key: ecies_keys.json
+                path: shard-{{ $shardId }}/ecies_keys.json
+              - key: provider_priv_validator_state.json
+                path: shard-{{ $shardId }}/provider_priv_validator_state.json
+          {{- end }}
+      - name: shard-files
+        emptyDir: {}
+      - name: raft
+        emptyDir: {}
+      - name: horcrux-home
+        emptyDir: {}
+      {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: state
+      {{- with .Values.persistence.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      accessModes:
+      - {{ .Values.persistence.accessMode }}
+      {{- if .Values.persistence.storageClassName }}
+      {{- if eq .Values.persistence.storageClassName "-" }}
+      storageClassName: ""
+      {{- else }}
+      storageClassName: {{ .Values.persistence.storageClassName }}
+      {{- end }}
+      {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.persistence.size }}
+  {{- end }}
+

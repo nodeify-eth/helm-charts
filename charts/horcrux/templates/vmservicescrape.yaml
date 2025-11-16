@@ -1,0 +1,31 @@
+{{- if .Values.monitoring.vmServiceScrape.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: {{ include "horcrux.fullname" . }}
+  namespace: {{ include "horcrux.namespace" . }}
+  labels:
+    {{- include "horcrux.labels" . | nindent 4 }}
+    {{- with .Values.monitoring.vmServiceScrape.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "horcrux.selectorLabels" . | nindent 6 }}
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: {{ .Values.monitoring.vmServiceScrape.interval }}
+    scrapeTimeout: {{ .Values.monitoring.vmServiceScrape.scrapeTimeout }}
+    relabelConfigs:
+    - sourceLabels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+      targetLabel: component
+    - sourceLabels: [__meta_kubernetes_pod_label_chain]
+      targetLabel: chain
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: pod
+    - sourceLabels: [__meta_kubernetes_namespace]
+      targetLabel: namespace
+{{- end }}
+

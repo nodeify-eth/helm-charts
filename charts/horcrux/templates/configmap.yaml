@@ -1,0 +1,29 @@
+{{- include "horcrux.validateConfig" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "horcrux.configMapName" . }}
+  namespace: {{ include "horcrux.namespace" . }}
+  labels:
+    {{- include "horcrux.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    signMode: {{ .Values.horcrux.signMode }}
+    {{- if eq .Values.horcrux.signMode "threshold" }}
+    thresholdMode:
+      threshold: {{ .Values.horcrux.thresholdMode.threshold }}
+      cosigners:
+      {{- include "horcrux.cosigners" . | nindent 6 }}
+      grpcTimeout: {{ .Values.horcrux.thresholdMode.grpcTimeout }}
+      raftTimeout: {{ .Values.horcrux.thresholdMode.raftTimeout }}
+    {{- end }}
+    chainNodes:
+    {{- range .Values.horcrux.chainNodes }}
+    - privValAddr: {{ .privValAddr }}
+    {{- end }}
+    debugAddr: {{ .Values.horcrux.debugAddr | quote }}
+    grpcAddr: {{ .Values.horcrux.grpcAddr | quote }}
+    {{- with .Values.horcrux.extraConfig }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+

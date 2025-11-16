@@ -1,0 +1,118 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Release Name: {{ .Release.Name }}
+Namespace: {{ include "horcrux.namespace" . }}
+Chart Version: {{ .Chart.Version }}
+App Version: {{ .Chart.AppVersion }}
+
+🔐 Horcrux Remote Signer Configuration
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Chain: {{ .Values.chain.id }}{{ if .Values.chain.environment }} ({{ .Values.chain.environment }}){{ end }}
+Sign Mode: {{ .Values.horcrux.signMode }}
+{{- if eq .Values.horcrux.signMode "threshold" }}
+Threshold: {{ .Values.horcrux.thresholdMode.threshold }}/{{ .Values.replicaCount }}
+{{- end }}
+Replicas: {{ .Values.replicaCount }}
+
+📊 Services
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{{- if .Values.service.headless.enabled }}
+Headless Service (P2P): {{ include "horcrux.serviceName" . }}.{{ include "horcrux.namespace" . }}.svc.cluster.local:{{ .Values.service.headless.p2pPort }}
+{{- end }}
+
+{{- if .Values.service.metrics.enabled }}
+Metrics Service: {{ include "horcrux.metricsServiceName" . }}.{{ include "horcrux.namespace" . }}.svc.cluster.local:{{ .Values.service.metrics.port }}
+{{- end }}
+
+🔍 Pod Status
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Check the status of your Horcrux pods:
+
+  kubectl get pods -n {{ include "horcrux.namespace" . }} -l app.kubernetes.io/name={{ include "horcrux.name" . }}
+
+View logs from a specific pod:
+
+  kubectl logs -n {{ include "horcrux.namespace" . }} {{ include "horcrux.fullname" . }}-0 -f
+
+View logs from all pods:
+
+  kubectl logs -n {{ include "horcrux.namespace" . }} -l app.kubernetes.io/name={{ include "horcrux.name" . }} --all-containers=true -f
+
+📈 Health Checks
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Check health status of a pod:
+
+  kubectl exec -n {{ include "horcrux.namespace" . }} {{ include "horcrux.fullname" . }}-0 -- wget -qO- http://localhost:2345/health
+
+{{- if .Values.service.metrics.enabled }}
+
+View metrics:
+
+  kubectl port-forward -n {{ include "horcrux.namespace" . }} svc/{{ include "horcrux.metricsServiceName" . }} 2345:2345
+
+Then visit: http://localhost:2345/metrics
+{{- end }}
+
+🔧 Configuration
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+View the Horcrux configuration:
+
+  kubectl get configmap -n {{ include "horcrux.namespace" . }} {{ include "horcrux.configMapName" . }} -o yaml
+
+{{- if eq .Values.shards.method "externalSecret" }}
+
+Check External Secrets status:
+
+  kubectl get externalsecrets -n {{ include "horcrux.namespace" . }} -l app.kubernetes.io/name={{ include "horcrux.name" . }}
+{{- end }}
+
+{{- if .Values.persistence.enabled }}
+
+🗄️  Persistent Storage
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+View persistent volume claims:
+
+  kubectl get pvc -n {{ include "horcrux.namespace" . }} -l app.kubernetes.io/name={{ include "horcrux.name" . }}
+{{- end }}
+
+{{- if or .Values.monitoring.serviceMonitor.enabled .Values.monitoring.vmServiceScrape.enabled }}
+
+📊 Monitoring
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{{- if .Values.monitoring.serviceMonitor.enabled }}
+ServiceMonitor created for Prometheus Operator
+{{- end }}
+{{- if .Values.monitoring.vmServiceScrape.enabled }}
+VMServiceScrape created for VictoriaMetrics Operator
+{{- end }}
+
+Metrics are available at: /metrics on port {{ .Values.service.metrics.port }}
+{{- end }}
+
+⚠️  Important Notes
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Ensure your validator nodes are configured to connect to Horcrux signers
+2. Verify that all co-signers can communicate with each other
+3. Monitor the validator state synchronization across all shards
+4. Keep your shard secrets secure and backed up
+{{- if eq .Values.horcrux.signMode "threshold" }}
+5. At least {{ .Values.horcrux.thresholdMode.threshold }} co-signers must be online for signing
+{{- end }}
+
+📚 Documentation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For more information, visit:
+- Horcrux Documentation: https://github.com/strangelove-ventures/horcrux
+- Chart Repository: {{ .Chart.Home }}
+
+Happy validating! 🚀
+

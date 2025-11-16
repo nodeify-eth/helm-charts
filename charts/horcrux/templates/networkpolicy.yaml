@@ -1,0 +1,25 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "horcrux.fullname" . }}
+  namespace: {{ include "horcrux.namespace" . }}
+  labels:
+    {{- include "horcrux.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "horcrux.selectorLabels" . | nindent 6 }}
+  policyTypes:
+  - Ingress
+  - Egress
+  {{- with .Values.networkPolicy.ingress }}
+  ingress:
+    {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- with .Values.networkPolicy.egress }}
+  egress:
+    {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- end }}
+
