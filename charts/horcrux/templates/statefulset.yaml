@@ -51,14 +51,11 @@ spec:
           ORDINAL=${HOSTNAME##*-}
           SHARD_ID=$((ORDINAL + 1))
           echo "Initializing co-signer ${SHARD_ID}"
-
+          
           # Copy shard files to emptyDir
           cp /horcrux/shards/shard-${SHARD_ID}/{{ .Values.chain.id }}_shard.json /shard-files/{{ .Values.chain.id }}_shard.json
           cp /horcrux/shards/shard-${SHARD_ID}/ecies_keys.json /shard-files/ecies_keys.json
-
-          # Copy config.yaml
-          cp /config-template/config.yaml /shard-files/config.yaml
-
+          
           # Initialize state if it doesn't exist
           if [ ! -f /horcrux/state/{{ .Values.chain.id }}_priv_validator_state.json ]; then
             echo "Initializing state from shard..."
@@ -67,10 +64,10 @@ spec:
           else
             echo "State already exists, skipping initialization"
           fi
-
+          
           # Create raft directory
           mkdir -p /horcrux/raft
-
+          
           echo "Initialization complete for shard ${SHARD_ID}"
         volumeMounts:
         - name: shards
@@ -82,9 +79,6 @@ spec:
           mountPath: /shard-files
         - name: raft
           mountPath: /horcrux/raft
-        - name: config
-          mountPath: /config-template
-          readOnly: true
         {{- with .Values.securityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}
@@ -121,7 +115,7 @@ spec:
         volumeMounts:
         - name: horcrux-home
           mountPath: /horcrux
-        - name: shard-files
+        - name: config
           mountPath: /horcrux/config.yaml
           subPath: config.yaml
         - name: shard-files
@@ -227,3 +221,4 @@ spec:
         requests:
           storage: {{ .Values.persistence.size }}
   {{- end }}
+

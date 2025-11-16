@@ -118,7 +118,7 @@ Generate cosigner configuration
 {{- $namespace := include "horcrux.namespace" . -}}
 {{- range $i := until (int .Values.replicaCount) }}
 - shardID: {{ add $i 1 }}
-  p2pAddr: tcp://{{ $fullname }}-{{ $i }}:{{ $.Values.service.headless.p2pPort }}
+  p2pAddr: tcp://{{ $fullname }}-{{ $i }}.{{ $serviceName }}.{{ $namespace }}.svc.cluster.local:{{ $.Values.service.headless.p2pPort }}
 {{- end }}
 {{- end }}
 
