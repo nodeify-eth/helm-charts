@@ -6,8 +6,8 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": [
-        "^charts/.+/Chart\\.yaml$"
+      "managerFilePatterns": [
+        "/^charts/.+/Chart\\.yaml$/"
       ],
       "matchStrings": [
         "appVersion:\\s*\"?(?<currentValue>[^\"\\s]+)\"?[\\s\\S]*?lookupName:\\s*\"?(?<depName>[^\"\\s]+)\"?"
