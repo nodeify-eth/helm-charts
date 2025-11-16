@@ -49,17 +49,16 @@ spec:
         - |
           set -e
           ORDINAL=${HOSTNAME##*-}
-          SHARD_ID=$((ORDINAL + 1))
-          echo "Initializing co-signer ${SHARD_ID}"
+          echo "Initializing co-signer with ordinal ${ORDINAL}"
           
-          # Copy shard files to emptyDir
-          cp /horcrux/shards/shard-${SHARD_ID}/{{ .Values.chain.id }}_shard.json /shard-files/{{ .Values.chain.id }}_shard.json
-          cp /horcrux/shards/shard-${SHARD_ID}/ecies_keys.json /shard-files/ecies_keys.json
+          # Copy shard files to emptyDir (using ordinal as array index)
+          cp /horcrux/shards/shard-${ORDINAL}/{{ .Values.chain.id }}_shard.json /shard-files/{{ .Values.chain.id }}_shard.json
+          cp /horcrux/shards/shard-${ORDINAL}/ecies_keys.json /shard-files/ecies_keys.json
           
           # Initialize state if it doesn't exist
           if [ ! -f /horcrux/state/{{ .Values.chain.id }}_priv_validator_state.json ]; then
             echo "Initializing state from shard..."
-            cp /horcrux/shards/shard-${SHARD_ID}/{{ .Values.chain.id }}_priv_validator_state.json /horcrux/state/
+            cp /horcrux/shards/shard-${ORDINAL}/{{ .Values.chain.id }}_priv_validator_state.json /horcrux/state/
             chmod 600 /horcrux/state/{{ .Values.chain.id }}_priv_validator_state.json
           else
             echo "State already exists, skipping initialization"
@@ -68,7 +67,7 @@ spec:
           # Create raft directory
           mkdir -p /horcrux/raft
           
-          echo "Initialization complete for shard ${SHARD_ID}"
+          echo "Initialization complete for ordinal ${ORDINAL}"
         volumeMounts:
         - name: shards
           mountPath: /horcrux/shards
@@ -166,17 +165,32 @@ spec:
         projected:
           defaultMode: 0400
           sources:
+          {{- if eq .Values.shards.method "externalSecret" }}
+          {{- range $i, $shardConfig := .Values.shards.externalSecrets.shardConfigs }}
+          {{- $shardId := int $shardConfig.shardId }}
+          - secret:
+              name: {{ include "horcrux.shardSecretName" (dict "root" $ "shardId" $shardId) }}
+              items:
+              - key: {{ $.Values.chain.id }}_shard.json
+                path: shard-{{ $i }}/{{ $.Values.chain.id }}_shard.json
+              - key: ecies_keys.json
+                path: shard-{{ $i }}/ecies_keys.json
+              - key: {{ $.Values.chain.id }}_priv_validator_state.json
+                path: shard-{{ $i }}/{{ $.Values.chain.id }}_priv_validator_state.json
+          {{- end }}
+          {{- else }}
           {{- range $i := until (int .Values.replicaCount) }}
           {{- $shardId := add $i 1 }}
           - secret:
               name: {{ include "horcrux.shardSecretName" (dict "root" $ "shardId" $shardId) }}
               items:
               - key: {{ $.Values.chain.id }}_shard.json
-                path: shard-{{ $shardId }}/{{ $.Values.chain.id }}_shard.json
+                path: shard-{{ $i }}/{{ $.Values.chain.id }}_shard.json
               - key: ecies_keys.json
-                path: shard-{{ $shardId }}/ecies_keys.json
+                path: shard-{{ $i }}/ecies_keys.json
               - key: {{ $.Values.chain.id }}_priv_validator_state.json
-                path: shard-{{ $shardId }}/{{ $.Values.chain.id }}_priv_validator_state.json
+                path: shard-{{ $i }}/{{ $.Values.chain.id }}_priv_validator_state.json
+          {{- end }}
           {{- end }}
       - name: shard-files
         emptyDir: {}
