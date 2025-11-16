@@ -116,9 +116,16 @@ Generate cosigner configuration
 {{- $fullname := include "horcrux.fullname" . -}}
 {{- $serviceName := include "horcrux.serviceName" . -}}
 {{- $namespace := include "horcrux.namespace" . -}}
+{{- if and (eq .Values.shards.method "externalSecret") .Values.shards.externalSecrets.enabled }}
+{{- range $i, $shardConfig := .Values.shards.externalSecrets.shardConfigs }}
+- shardID: {{ int $shardConfig.shardId }}
+  p2pAddr: tcp://{{ $fullname }}-{{ $i }}.{{ $serviceName }}.{{ $namespace }}.svc.cluster.local:{{ $.Values.service.headless.p2pPort }}
+{{- end }}
+{{- else }}
 {{- range $i := until (int .Values.replicaCount) }}
 - shardID: {{ add $i 1 }}
   p2pAddr: tcp://{{ $fullname }}-{{ $i }}.{{ $serviceName }}.{{ $namespace }}.svc.cluster.local:{{ $.Values.service.headless.p2pPort }}
+{{- end }}
 {{- end }}
 {{- end }}
 
@@ -196,4 +203,3 @@ checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sh
 {{ toYaml . }}
 {{- end }}
 {{- end }}
-
