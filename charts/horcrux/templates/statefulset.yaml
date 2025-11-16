@@ -51,23 +51,23 @@ spec:
           ORDINAL=${HOSTNAME##*-}
           SHARD_ID=$((ORDINAL + 1))
           echo "Initializing co-signer ${SHARD_ID}"
-          
+
           # Copy shard files to emptyDir
-          cp /horcrux/shards/shard-${SHARD_ID}/provider_shard.json /shard-files/provider_shard.json
+          cp /horcrux/shards/shard-${SHARD_ID}/{{ .Values.chain.id }}_shard.json /shard-files/{{ .Values.chain.id }}_shard.json
           cp /horcrux/shards/shard-${SHARD_ID}/ecies_keys.json /shard-files/ecies_keys.json
-          
+
           # Initialize state if it doesn't exist
-          if [ ! -f /horcrux/state/provider_priv_validator_state.json ]; then
+          if [ ! -f /horcrux/state/{{ .Values.chain.id }}_priv_validator_state.json ]; then
             echo "Initializing state from shard..."
-            cp /horcrux/shards/shard-${SHARD_ID}/provider_priv_validator_state.json /horcrux/state/
-            chmod 600 /horcrux/state/provider_priv_validator_state.json
+            cp /horcrux/shards/shard-${SHARD_ID}/{{ .Values.chain.id }}_priv_validator_state.json /horcrux/state/
+            chmod 600 /horcrux/state/{{ .Values.chain.id }}_priv_validator_state.json
           else
             echo "State already exists, skipping initialization"
           fi
-          
+
           # Create raft directory
           mkdir -p /horcrux/raft
-          
+
           echo "Initialization complete for shard ${SHARD_ID}"
         volumeMounts:
         - name: shards
@@ -119,8 +119,8 @@ spec:
           mountPath: /horcrux/config.yaml
           subPath: config.yaml
         - name: shard-files
-          mountPath: /horcrux/provider_shard.json
-          subPath: provider_shard.json
+          mountPath: /horcrux/{{ .Values.chain.id }}_shard.json
+          subPath: {{ .Values.chain.id }}_shard.json
         - name: shard-files
           mountPath: /horcrux/ecies_keys.json
           subPath: ecies_keys.json
@@ -171,12 +171,12 @@ spec:
           - secret:
               name: {{ include "horcrux.shardSecretName" (dict "root" $ "shardId" $shardId) }}
               items:
-              - key: provider_shard.json
-                path: shard-{{ $shardId }}/provider_shard.json
+              - key: {{ $.Values.chain.id }}_shard.json
+                path: shard-{{ $shardId }}/{{ $.Values.chain.id }}_shard.json
               - key: ecies_keys.json
                 path: shard-{{ $shardId }}/ecies_keys.json
-              - key: provider_priv_validator_state.json
-                path: shard-{{ $shardId }}/provider_priv_validator_state.json
+              - key: {{ $.Values.chain.id }}_priv_validator_state.json
+                path: shard-{{ $shardId }}/{{ $.Values.chain.id }}_priv_validator_state.json
           {{- end }}
       - name: shard-files
         emptyDir: {}
@@ -221,4 +221,3 @@ spec:
         requests:
           storage: {{ .Values.persistence.size }}
   {{- end }}
-
