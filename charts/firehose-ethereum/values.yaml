@@ -112,6 +112,18 @@ fullMode:
       podAnnotations: {}
         # prometheus.io/scrape: "true"
         # prometheus.io/port: "5054"
+
+      # -- Node selector for lighthouse beacon node pod scheduling
+      nodeSelector: {}
+        # disktype: ssd
+        # node-role: firehose
+
+      # -- Tolerations for lighthouse beacon node pod scheduling
+      tolerations: []
+        # - key: "dedicated"
+        #   operator: "Equal"
+        #   value: "firehose"
+        #   effect: "NoSchedule"
     
     opNode:
       # -- Enable OP Node for Optimism L2 execution layer synchronization
@@ -171,6 +183,18 @@ fullMode:
         # prometheus.io/scrape: "true"
         # prometheus.io/port: "7300"
 
+      # -- Node selector for op-node pod scheduling
+      nodeSelector: {}
+        # disktype: ssd
+        # node-role: firehose
+
+      # -- Tolerations for op-node pod scheduling
+      tolerations: []
+        # - key: "dedicated"
+        #   operator: "Equal"
+        #   value: "firehose"
+        #   effect: "NoSchedule"
+
     substreams:
       # -- Enable Substreams Tier 1
       enabled: false
@@ -225,6 +249,18 @@ fullMode:
       podAnnotations: {}
         # prometheus.io/scrape: "true"
         # prometheus.io/port: "9102"
+
+      # -- Node selector for substreams tier 1 pod scheduling
+      nodeSelector: {}
+        # disktype: ssd
+        # node-role: firehose
+
+      # -- Tolerations for substreams tier 1 pod scheduling
+      tolerations: []
+        # - key: "dedicated"
+        #   operator: "Equal"
+        #   value: "firehose"
+        #   effect: "NoSchedule"
 
       config:
         # -- Substreams arguments
@@ -294,6 +330,18 @@ fullMode:
         # prometheus.io/scrape: "true"
         # prometheus.io/port: "9102"
 
+      # -- Node selector for grpc server pod scheduling
+      nodeSelector: {}
+        # disktype: ssd
+        # node-role: firehose
+
+      # -- Tolerations for grpc server pod scheduling
+      tolerations: []
+        # - key: "dedicated"
+        #   operator: "Equal"
+        #   value: "firehose"
+        #   effect: "NoSchedule"
+
       config:
         # -- gRPC server arguments
         advertise-chain-name: mainnet
@@ -346,6 +394,18 @@ fullMode:
       podAnnotations: {}
         # prometheus.io/scrape: "true"
         # prometheus.io/port: "9102"
+
+      # -- Node selector for reader node pod scheduling
+      nodeSelector: {}
+        # disktype: ssd
+        # node-role: firehose
+
+      # -- Tolerations for reader node pod scheduling
+      tolerations: []
+        # - key: "dedicated"
+        #   operator: "Equal"
+        #   value: "firehose"
+        #   effect: "NoSchedule"
 
       config:
         # -- Execution binary path
@@ -402,6 +462,18 @@ fullMode:
         # prometheus.io/scrape: "true"
         # prometheus.io/port: "9102"
 
+      # -- Node selector for merger node pod scheduling
+      nodeSelector: {}
+        # disktype: ssd
+        # node-role: firehose
+
+      # -- Tolerations for merger node pod scheduling
+      tolerations: []
+        # - key: "dedicated"
+        #   operator: "Equal"
+        #   value: "firehose"
+        #   effect: "NoSchedule"
+
       config: 
         # -- Merger node arguments
         merger-time-between-store-lookups: 10s
@@ -454,6 +526,18 @@ fullMode:
         # prometheus.io/scrape: "true"
         # prometheus.io/port: "9102"
 
+      # -- Node selector for relayer node pod scheduling
+      nodeSelector: {}
+        # disktype: ssd
+        # node-role: firehose
+
+      # -- Tolerations for relayer node pod scheduling
+      tolerations: []
+        # - key: "dedicated"
+        #   operator: "Equal"
+        #   value: "firehose"
+        #   effect: "NoSchedule"
+
       config:
         # -- Relayer node arguments
         relayer-max-source-latency: 1h
@@ -504,6 +588,18 @@ fullMode:
       podAnnotations: {}
         # prometheus.io/scrape: "true"
         # prometheus.io/port: "9102"
+
+      # -- Node selector for indexer node pod scheduling
+      nodeSelector: {}
+        # disktype: ssd
+        # node-role: firehose
+
+      # -- Tolerations for indexer node pod scheduling
+      tolerations: []
+        # - key: "dedicated"
+        #   operator: "Equal"
+        #   value: "firehose"
+        #   effect: "NoSchedule"
 
       config:
         # -- Indexer arguments
