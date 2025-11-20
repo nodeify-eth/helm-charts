@@ -14,9 +14,13 @@ spec:
     matchLabels:
       {{- include "firehose-ethereum.selectorLabels" . | nindent 6 }}
       {{- $componentLabel | nindent 6 }}
-  replicas: {{ $values.components.relayer.replicas }}
+  replicas: {{ $values.components.indexer.replicas }}
   template:
     metadata:
+      {{- with $values.components.indexer.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "firehose-ethereum.selectorLabels" . | nindent 8 }}
         {{- $componentLabel | nindent 8 }}
@@ -26,6 +30,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "firehose-ethereum.serviceAccountName" . }}
+      {{- with $values.components.indexer.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       nodeSelector:
 {{ toYaml .Values.nodeSelector | indent 8 }}
       containers:
@@ -35,6 +43,10 @@ spec:
           command: ["fireeth"]
           args: ["start", "-c", "/config/config.yaml"]
           {{- include "firehose-ethereum.envVars" (dict "context" . "component" $values.components.indexer) | nindent 10 }}
+          {{- with $values.components.indexer.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - name: grpc
               containerPort: 10000

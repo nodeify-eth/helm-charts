@@ -200,6 +200,32 @@ fullMode:
       #       name: my-configmap
       #       key: config-key
 
+      # -- Resource requests and limits for substreams tier 1
+      resources: {}
+        # limits:
+        #   cpu: 4000m
+        #   memory: 16Gi
+        # requests:
+        #   cpu: 2000m
+        #   memory: 8Gi
+
+      # -- Affinity rules for substreams tier 1 pod scheduling
+      affinity: {}
+        # podAntiAffinity:
+        #   requiredDuringSchedulingIgnoredDuringExecution:
+        #   - labelSelector:
+        #       matchExpressions:
+        #       - key: app.kubernetes.io/component
+        #         operator: In
+        #         values:
+        #         - substreams-tier-1
+        #     topologyKey: kubernetes.io/hostname
+
+      # -- Annotations to add to substreams tier 1 pods
+      podAnnotations: {}
+        # prometheus.io/scrape: "true"
+        # prometheus.io/port: "9102"
+
       config:
         # -- Substreams arguments
         advertise-chain-name: mainnet
@@ -241,6 +267,32 @@ fullMode:
       #     configMapKeyRef:
       #       name: my-configmap
       #       key: config-key
+
+      # -- Resource requests and limits for grpc server
+      resources: {}
+        # limits:
+        #   cpu: 2000m
+        #   memory: 8Gi
+        # requests:
+        #   cpu: 1000m
+        #   memory: 4Gi
+
+      # -- Affinity rules for grpc server pod scheduling
+      affinity: {}
+        # podAntiAffinity:
+        #   requiredDuringSchedulingIgnoredDuringExecution:
+        #   - labelSelector:
+        #       matchExpressions:
+        #       - key: app.kubernetes.io/component
+        #         operator: In
+        #         values:
+        #         - grpc
+        #     topologyKey: kubernetes.io/hostname
+
+      # -- Annotations to add to grpc server pods
+      podAnnotations: {}
+        # prometheus.io/scrape: "true"
+        # prometheus.io/port: "9102"
 
       config:
         # -- gRPC server arguments
@@ -324,6 +376,32 @@ fullMode:
       #       name: my-configmap
       #       key: config-key
 
+      # -- Resource requests and limits for merger node
+      resources: {}
+        # limits:
+        #   cpu: 4000m
+        #   memory: 16Gi
+        # requests:
+        #   cpu: 2000m
+        #   memory: 8Gi
+
+      # -- Affinity rules for merger node pod scheduling
+      affinity: {}
+        # podAntiAffinity:
+        #   requiredDuringSchedulingIgnoredDuringExecution:
+        #   - labelSelector:
+        #       matchExpressions:
+        #       - key: app.kubernetes.io/component
+        #         operator: In
+        #         values:
+        #         - merger
+        #     topologyKey: kubernetes.io/hostname
+
+      # -- Annotations to add to merger node pods
+      podAnnotations: {}
+        # prometheus.io/scrape: "true"
+        # prometheus.io/port: "9102"
+
       config: 
         # -- Merger node arguments
         merger-time-between-store-lookups: 10s
@@ -350,6 +428,32 @@ fullMode:
       #       name: my-configmap
       #       key: config-key
 
+      # -- Resource requests and limits for relayer node
+      resources: {}
+        # limits:
+        #   cpu: 2000m
+        #   memory: 8Gi
+        # requests:
+        #   cpu: 1000m
+        #   memory: 4Gi
+
+      # -- Affinity rules for relayer node pod scheduling
+      affinity: {}
+        # podAntiAffinity:
+        #   requiredDuringSchedulingIgnoredDuringExecution:
+        #   - labelSelector:
+        #       matchExpressions:
+        #       - key: app.kubernetes.io/component
+        #         operator: In
+        #         values:
+        #         - relayer
+        #     topologyKey: kubernetes.io/hostname
+
+      # -- Annotations to add to relayer node pods
+      podAnnotations: {}
+        # prometheus.io/scrape: "true"
+        # prometheus.io/port: "9102"
+
       config:
         # -- Relayer node arguments
         relayer-max-source-latency: 1h
@@ -357,7 +461,7 @@ fullMode:
     indexer:
       # -- Enable the Firehose indexer node
       enabled: true
-      # -- Number of replicas for the relayer node
+      # -- Number of replicas for the indexer node
       replicas: 1
 
       # -- Extra environment variables for indexer component
@@ -374,6 +478,32 @@ fullMode:
       #     configMapKeyRef:
       #       name: my-configmap
       #       key: config-key
+
+      # -- Resource requests and limits for indexer node
+      resources: {}
+        # limits:
+        #   cpu: 2000m
+        #   memory: 8Gi
+        # requests:
+        #   cpu: 1000m
+        #   memory: 4Gi
+
+      # -- Affinity rules for indexer node pod scheduling
+      affinity: {}
+        # podAntiAffinity:
+        #   requiredDuringSchedulingIgnoredDuringExecution:
+        #   - labelSelector:
+        #       matchExpressions:
+        #       - key: app.kubernetes.io/component
+        #         operator: In
+        #         values:
+        #         - indexer
+        #     topologyKey: kubernetes.io/hostname
+
+      # -- Annotations to add to indexer node pods
+      podAnnotations: {}
+        # prometheus.io/scrape: "true"
+        # prometheus.io/port: "9102"
 
       config:
         # -- Indexer arguments
