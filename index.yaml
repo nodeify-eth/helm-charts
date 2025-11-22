@@ -1644,6 +1644,21 @@ entries:
   - annotations:
       lookupName: ghcr.io/streamingfast/firehose-ethereum
     apiVersion: v2
+    appVersion: v2.14.2
+    created: "2025-11-22T03:16:45.732964353Z"
+    description: A Helm chart for deploying substreams-tier-2
+    digest: 9846978aac5c2b514c960923192c64cc3e14d086425a3d472087ff1869cfa488
+    keywords:
+    - substreams-tier-2
+    - firehose-ethereum
+    name: substreams-tier-2
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-tier-2-1.1.1/substreams-tier-2-1.1.1.tgz
+    version: 1.1.1
+  - annotations:
+      lookupName: ghcr.io/streamingfast/firehose-ethereum
+    apiVersion: v2
     appVersion: v2.14.1
     created: "2025-11-11T22:39:06.98417459Z"
     description: A Helm chart for deploying substreams-tier-2
@@ -1671,4 +1686,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-tier-2-1.0.0/substreams-tier-2-1.0.0.tgz
     version: 1.0.0
-generated: "2025-11-20T22:50:24.520387608Z"
+generated: "2025-11-22T03:16:45.733156912Z"
