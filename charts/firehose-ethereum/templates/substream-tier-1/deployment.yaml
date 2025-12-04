@@ -63,8 +63,17 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /config
+            {{- range $values.components.substreams.extraConfigMaps }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
       volumes:
         - name: config-volume
           configMap:
             name: {{ .Release.Name }}-{{ $componentName }}-config
+        {{- range $values.components.substreams.extraConfigMaps }}
+        - name: {{ .name }}
+          configMap:
+            name: {{ .name }}
+        {{- end }}
 {{- end }}

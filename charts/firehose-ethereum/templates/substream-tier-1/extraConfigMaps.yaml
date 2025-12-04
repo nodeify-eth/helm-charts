@@ -1,0 +1,20 @@
+{{- $values := $.Values.fullMode }}
+{{- $componentName := "substreams-tier-1" }}
+{{- $componentLabel := include "firehose-ethereum.componentLabelFor" $componentName }}
+{{- if and (eq .Values.mode "full") $values.components.substreams.enabled }}
+{{- range $values.components.substreams.extraConfigMaps }}
+{{- if .data }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .name }}
+  labels:
+    {{- include "firehose-ethereum.labels" $ | nindent 4 }}
+    {{- $componentLabel | nindent 4 }}
+data:
+  {{- toYaml .data | nindent 2 }}
+{{- end }}
+{{- end }}
+{{- end }}
+

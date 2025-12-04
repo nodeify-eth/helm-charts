@@ -224,6 +224,30 @@ fullMode:
       #       name: my-configmap
       #       key: config-key
 
+      # -- Extra ConfigMaps to mount as volumes
+      # Each entry can either reference an existing configmap (name only)
+      # or create a new one with data (name + data + mountPath)
+      extraConfigMaps: []
+      # Example 1: Mount an existing ConfigMap
+      # - name: my-existing-config
+      #   mountPath: /extra-config
+      #
+      # Example 2: Create and mount a new ConfigMap with custom data
+      # - name: my-json-config
+      #   mountPath: /config/json
+      #   data:
+      #     config.json: |
+      #       {
+      #         "key": "value",
+      #         "nested": {
+      #           "field": "data"
+      #         }
+      #       }
+      #     settings.json: |
+      #       {
+      #         "enabled": true
+      #       }
+
       # -- Resource requests and limits for substreams tier 1
       resources: {}
         # limits:
