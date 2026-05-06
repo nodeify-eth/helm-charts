@@ -2,8 +2,8 @@ apiVersion: v2
 name: indexer-tools
 description: A Helm chart for Indexer Tools frontend application
 type: application
-version: 2.1.0
-appVersion: "v3.4.0"
+version: 2.1.1
+appVersion: "v3.4.4"
 maintainers:
   - name: vince
     email: vince@nodeify.net
