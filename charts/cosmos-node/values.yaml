@@ -55,7 +55,7 @@ initContainer:
   image:
     registry: ""
     repository: "alpine"
-    tag: "3.23"
+    tag: "3.24"
     pullPolicy: IfNotPresent
   # -- Init container resources
   resources:
