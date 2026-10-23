@@ -46,9 +46,39 @@ git fetch origin main
 
 The check reads committed content and reports the exact target and head commits.
 Manually bump `version` and push the updated PR head when it fails, including on
-forks. An `appVersion` update alone does not satisfy this policy. The existing
-automatic appVersion bump may create a later commit; a successful check for an
-earlier commit does not validate that new head. Pushes made with `GITHUB_TOKEN`
-generally do not trigger another workflow run, so that head still needs validation.
+forks. An `appVersion` update alone does not satisfy this policy. The automatic
+appVersion bump may create a later commit for same-repository PRs. Fork and
+Dependabot PRs require manual version changes. Any author version change is
+preserved; an invalid or insufficient change still fails the version check.
+Prerelease or build-metadata versions require a manual version increase when
+appVersion changes.
+
+After a bot bump, confirm the actual final commit SHA on the PR. GitHub creates
+approval-required PR workflow runs for `opened`, `synchronize`, and `reopened`
+events caused by `GITHUB_TOKEN`; ordinary token-generated push runs remain
+suppressed. A maintainer with write access must review the final commit and
+workflow changes, then select **Approve workflows to run** on the PR. Verify that
+`Validate Charts` runs on that exact final SHA and passes. A successful earlier
+run does not validate the bot commit. See GitHub's
+[workflow trigger rules](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).
+
+If no final-head run or approval banner appears, the branch author or maintainer
+can fetch the PR source branch, confirm its current SHA, and request a fresh
+human-triggered run with a content-identical empty commit:
+
+```sh
+git rev-parse HEAD
+git commit --allow-empty -m "ci: request validation for current chart head"
+git push
+```
+
+Run these commands only on the current PR source branch after fetching its latest
+commits. This creates a new final head; verify that head's `Validate Charts` run
+passes (approve it if required). The empty commit does not cause another version
+bump. Rerunning the old pre-bump workflow retains its original SHA; the generic
+manual workflow run also skips PR version checks. Neither substitutes for this
+final-head validation. If the PR head or target advances during a run, update the
+branch and validate its current head again.
+
 Enforcing required checks and up-to-date branches in repository rules is an
 owner configuration step beyond this local check.

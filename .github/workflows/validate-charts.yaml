@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 # Tool versions for both CI and the local checks in CONTRIBUTING.md.
 env:
@@ -19,6 +20,12 @@ jobs:
   validate:
     name: Validate Charts
     runs-on: ubuntu-24.04
+    env:
+      REPOSITORY: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      BASE_REF: ${{ github.base_ref }}
+      HEAD_REF: ${{ github.head_ref }}
+      EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -36,6 +43,13 @@ jobs:
         run: |
           python -m venv .venv
           .venv/bin/python -m pip install -r requirements-dev.txt
+
+      - name: Confirm current PR snapshot
+        id: snapshot
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .venv/bin/python .github/scripts/chart_pr_automation.py validate-snapshot
 
       - name: Check changed chart versions
         if: github.event_name == 'pull_request'
@@ -67,3 +81,10 @@ jobs:
           for chart in charts/*/Chart.yaml; do
             helm lint "${chart%/Chart.yaml}" || exit 1
           done
+
+      - name: Confirm PR snapshot is still current
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_BASE_SHA: ${{ steps.snapshot.outputs.base_sha }}
+        run: .venv/bin/python .github/scripts/chart_pr_automation.py validate-snapshot
