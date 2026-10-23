@@ -28,21 +28,41 @@ jobs:
 
       - name: Check for appVersion changes
         id: check-changes
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          CHANGED_CHARTS=$(git diff --name-only origin/${{ github.base_ref }} | grep "Chart.yaml" || echo "")
+          BASE_COMMIT=$(git merge-base "origin/$BASE_REF" HEAD)
+          CHANGED_CHARTS=$(git diff --name-only --diff-filter=AM "$BASE_COMMIT" -- 'charts/*/Chart.yaml')
           if [ -n "$CHANGED_CHARTS" ]; then
-            echo "changed_charts=$CHANGED_CHARTS" >> $GITHUB_OUTPUT
+            {
+              echo 'changed_charts<<CHART_PATHS'
+              echo "$CHANGED_CHARTS"
+              echo 'CHART_PATHS'
+            } >> "$GITHUB_OUTPUT"
           fi
 
       - name: Bump chart versions
         if: steps.check-changes.outputs.changed_charts != ''
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          CHANGED_CHARTS: ${{ steps.check-changes.outputs.changed_charts }}
         run: |
-          # Configure git with a PAT instead of GITHUB_TOKEN
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
-          for chart_yaml in ${{ steps.check-changes.outputs.changed_charts }}; do
-            if git diff origin/${{ github.base_ref }} $chart_yaml | grep -q "appVersion:"; then
+          BASE_COMMIT=$(git merge-base "origin/$BASE_REF" HEAD)
+
+          while IFS= read -r chart_yaml; do
+            # New charts already declare their initial version.
+            if ! base_chart=$(git show "$BASE_COMMIT:$chart_yaml" 2>/dev/null); then
+              continue
+            fi
+            base_version=$(echo "$base_chart" | grep '^version:')
+            current_version_line=$(grep '^version:' "$chart_yaml")
+            if [ "$base_version" != "$current_version_line" ]; then
+              echo "Chart version already changed in $chart_yaml"
+              continue
+            fi
+            if git diff "$BASE_COMMIT" -- "$chart_yaml" | grep -qE '^[+-]appVersion:'; then
               echo "Bumping version in $chart_yaml"
               
               # Get current version
@@ -56,11 +76,11 @@ jobs:
               new_version="$major.$minor.$new_patch"
               
               # Update version in file
-              sed -i "s/^version: .*/version: $new_version/" "$chart_yaml"
+              NEW_VERSION="$new_version" perl -pi -e 's/^version: .*/version: $ENV{NEW_VERSION}/' "$chart_yaml"
               
               git add "$chart_yaml"
             fi
-          done
+          done <<< "$CHANGED_CHARTS"
           
           if git diff --staged --quiet; then
             echo "No chart versions to bump"
