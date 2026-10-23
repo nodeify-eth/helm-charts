@@ -1,7 +1,7 @@
 # Cosmos Node Helm Chart
 
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/cosmos-node)](https://artifacthub.io/packages/search?repo=cosmos-node)
-[![Helm Chart Version](https://img.shields.io/badge/chart-2.6.1-blue)](https://github.com/nodeify-eth/helm-charts)
+[![Helm Chart Version](https://img.shields.io/badge/chart-2.6.2-blue)](https://github.com/nodeify-eth/helm-charts)
 
 A professional, production-ready Helm chart for deploying Cosmos SDK blockchain nodes with enterprise-grade features and security.
 
@@ -195,7 +195,7 @@ image:
 bootstrap:
   genesis:
     url: "https://example.com/genesis.json"
-    checksum: "sha256:abcd1234..."
+    checksum: "abcd1234..."  # Replace with the complete raw SHA256 hex digest
   seeds:
     list: "seed1@1.2.3.4:26656,seed2@5.6.7.8:26656"
   snapshot:
@@ -515,3 +515,7 @@ The chart metadata declares [Apache License 2.0](https://www.apache.org/licenses
 ---
 
 *Made with ❤️ by the Cosmos community*
+
+### Compatibility note for 2.6.2
+
+Genesis checksum validation now checks the downloaded genesis file before the entrypoint moves it to `genesis.json`. Supply the raw SHA256 hex digest in `bootstrap.genesis.checksum`; leaving it empty continues to skip checksum validation. Bootstrap paths and initialization order are unchanged.
