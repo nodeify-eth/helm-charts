@@ -1,6 +1,8 @@
 # firehose-core
 
-![Version: 1.2.11](https://img.shields.io/badge/Version-1.2.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v1.10.2](https://img.shields.io/badge/AppVersion-v1.10.2-informational?style=flat-square)
+![Version: 1.2.12](https://img.shields.io/badge/Version-1.2.12-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v1.10.2](https://img.shields.io/badge/AppVersion-v1.10.2-informational?style=flat-square)
+
+Compatibility: Active full-mode gRPC or Substreams components with `ingress.enabled=true` now require `mode=full`, including when hosts are empty or replicas are zero. Before upgrading mixed-mode configurations, deliberately disable the corresponding full-mode ingress or switch to `mode=full`. Disabled components may retain ingress options.
 
 Metrics Services retain their public `metrics` port (9102) and now target the existing named container port for each selected workload.
 

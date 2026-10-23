@@ -1,4 +1,7 @@
 {{- $values := $.Values.fullMode.components.grpc }}
+{{- if and $values.enabled $values.ingress.enabled (ne .Values.mode "full") }}
+{{- fail "fullMode.components.grpc.ingress.enabled requires mode=full; disable this full-mode ingress or use mode=full" }}
+{{- end }}
 {{- $componentName := "grpc" }}
 {{- $componentLabel := include "firehose-ethereum.componentLabelFor" $componentName }}
 {{- if and $values.enabled (default false $values.ingress.enabled) (ne (default "" $values.ingress.host) "") }}
