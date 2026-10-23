@@ -1,0 +1,10 @@
+mode: chunk
+chunkMode:
+  method: poller
+  chunkConfig:
+    startBlock: 0
+    stopBlock: 1000
+    workers: 1
+  components:
+    rpcPoller:
+      endpoint: https://ethereum-rpc.publicnode.com

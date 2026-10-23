@@ -1,0 +1,12 @@
+mode: chunk
+chunkMode:
+  method: poller
+  chunkConfig:
+    startBlock: 0
+    stopBlock: 1000
+    workers: 2
+  components:
+    remoteFirehose:
+      endpoint: mainnet.eth.streamingfast.io:443
+    rpcPoller:
+      endpoint: https://ethereum-rpc.publicnode.com

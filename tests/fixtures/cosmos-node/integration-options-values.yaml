@@ -1,0 +1,22 @@
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+  - host: cosmos.example.com
+    paths:
+    - path: /
+      pathType: Prefix
+      backend:
+        service:
+          name: rpc
+          port: 26657
+  tls:
+  - hosts:
+    - cosmos.example.com
+    secretName: fixture-cosmos-tls
+autoscaling:
+  enabled: true
+networkPolicy:
+  enabled: true
+podDisruptionBudget:
+  enabled: true

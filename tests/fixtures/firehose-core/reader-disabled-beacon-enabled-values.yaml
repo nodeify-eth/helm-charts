@@ -1,0 +1,4 @@
+fullMode:
+  components:
+    reader:
+      enabled: false

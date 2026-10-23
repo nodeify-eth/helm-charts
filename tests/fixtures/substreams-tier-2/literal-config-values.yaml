@@ -1,0 +1,8 @@
+substreams_tier_2:
+  config: 'log-verbosity: 1
+
+    log-to-file: false
+
+    substreams-tier2-grpc-listen-addr: :9000
+
+    '

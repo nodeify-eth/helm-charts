@@ -1,0 +1,190 @@
+chart: firehose-core
+cases:
+- name: full-default
+  values: full-default-values.yaml
+  resources:
+  - ConfigMap/fixture-firehose-grpc-config
+  - ConfigMap/fixture-firehose-indexer-config
+  - ConfigMap/fixture-firehose-merger-config
+  - ConfigMap/fixture-firehose-reader-config
+  - ConfigMap/fixture-firehose-relayer-config
+  - Deployment/fixture-firehose-grpc
+  - Deployment/fixture-firehose-indexer
+  - Deployment/fixture-firehose-merger
+  - Deployment/fixture-firehose-relayer
+  - Secret/fixture-firehose-jwt
+  - Service/fixture-firehose-beacon-svc
+  - Service/fixture-firehose-grpc-svc
+  - Service/fixture-firehose-merger-svc
+  - Service/fixture-firehose-reader-svc
+  - Service/fixture-firehose-relayer-svc
+  - ServiceMonitor/fixture-firehose-grpc-monitor
+  - StatefulSet/fixture-firehose-beacon
+  - StatefulSet/fixture-firehose-reader
+  external_resources:
+  - kind: ServiceAccount
+    name: default
+- name: full-substreams-ingress
+  values: full-substreams-ingress-values.yaml
+  resources:
+  - ConfigMap/fixture-firehose-grpc-config
+  - ConfigMap/fixture-firehose-indexer-config
+  - ConfigMap/fixture-firehose-merger-config
+  - ConfigMap/fixture-firehose-reader-config
+  - ConfigMap/fixture-firehose-relayer-config
+  - ConfigMap/fixture-substreams-tier-1-config
+  - Deployment/fixture-firehose-grpc
+  - Deployment/fixture-firehose-indexer
+  - Deployment/fixture-firehose-merger
+  - Deployment/fixture-firehose-relayer
+  - Deployment/fixture-substreams-tier-1
+  - Ingress/fixture-firehose-grpc-ingress
+  - Ingress/fixture-substreams-tier-1-ingress
+  - Secret/fixture-firehose-jwt
+  - Service/fixture-firehose-beacon-svc
+  - Service/fixture-firehose-grpc-svc
+  - Service/fixture-firehose-merger-svc
+  - Service/fixture-firehose-reader-svc
+  - Service/fixture-firehose-relayer-svc
+  - Service/fixture-substreams-tier-1-svc
+  - ServiceMonitor/fixture-firehose-grpc-monitor
+  - ServiceMonitor/fixture-substreams-tier-1-monitor
+  - StatefulSet/fixture-firehose-beacon
+  - StatefulSet/fixture-firehose-reader
+  external_resources:
+  - kind: ServiceAccount
+    name: default
+  - kind: Secret
+    name: fixture-firehose-grpc-tls
+    keys:
+    - tls.crt
+    - tls.key
+  - kind: Secret
+    name: fixture-firehose-substreams-tier-1-tls
+    keys:
+    - tls.crt
+    - tls.key
+- name: full-disabled-components
+  values: full-disabled-components-values.yaml
+  allow_empty: true
+  resources: []
+- name: chunk-firehose
+  values: chunk-firehose-values.yaml
+  chunk_ranges:
+  - - 0
+    - 600
+  - - 500
+    - 1000
+  resources:
+  - ConfigMap/fixture-remote-firehose-config
+  - StatefulSet/firehose-chunk-0
+  - StatefulSet/firehose-chunk-1
+  external_resources:
+  - kind: ServiceAccount
+    name: default
+- name: chunk-poller
+  values: chunk-poller-values.yaml
+  chunk_ranges:
+  - - 0
+    - 600
+  - - 500
+    - 1000
+  resources:
+  - ConfigMap/fixture-rpcpoller-config
+  - StatefulSet/firehose-poller-chunk-0
+  - StatefulSet/firehose-poller-chunk-1
+  external_resources:
+  - kind: ServiceAccount
+    name: default
+- name: reader-disabled-beacon-enabled
+  values: reader-disabled-beacon-enabled-values.yaml
+  error_contains: enabled JWT clients with reader disabled require
+- name: full-env-secret-refs
+  values: full-env-secret-refs-values.yaml
+  resources:
+  - ConfigMap/fixture-firehose-grpc-config
+  - ConfigMap/fixture-firehose-indexer-config
+  - ConfigMap/fixture-firehose-merger-config
+  - ConfigMap/fixture-firehose-reader-config
+  - ConfigMap/fixture-firehose-relayer-config
+  - Deployment/fixture-firehose-grpc
+  - Deployment/fixture-firehose-indexer
+  - Deployment/fixture-firehose-merger
+  - Deployment/fixture-firehose-relayer
+  - Secret/fixture-firehose-jwt
+  - Service/fixture-firehose-beacon-svc
+  - Service/fixture-firehose-grpc-svc
+  - Service/fixture-firehose-merger-svc
+  - Service/fixture-firehose-reader-svc
+  - Service/fixture-firehose-relayer-svc
+  - ServiceMonitor/fixture-firehose-grpc-monitor
+  - StatefulSet/fixture-firehose-beacon
+  - StatefulSet/fixture-firehose-reader
+  external_resources:
+  - kind: ServiceAccount
+    name: default
+  - kind: Secret
+    name: fixture-s3
+    keys:
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
+  - kind: ConfigMap
+    name: fixture-env-config
+    keys:
+    - value
+  - kind: Secret
+    name: fixture-env-secret
+    keys:
+    - value
+- name: chunk-firehose-irregular
+  values: chunk-firehose-irregular-values.yaml
+  chunk_ranges:
+  - - 137
+    - 1000
+  - - 900
+    - 1700
+  - - 1600
+    - 2437
+  resources:
+  - ConfigMap/fixture-remote-firehose-config
+  - StatefulSet/firehose-chunk-0
+  - StatefulSet/firehose-chunk-1
+  - StatefulSet/firehose-chunk-2
+  external_resources:
+  - kind: ServiceAccount
+    name: default
+- name: chunk-poller-single
+  values: chunk-poller-single-values.yaml
+  chunk_ranges:
+  - - 0
+    - 1000
+  resources:
+  - ConfigMap/fixture-rpcpoller-config
+  - StatefulSet/firehose-poller-chunk-0
+  external_resources:
+  - kind: ServiceAccount
+    name: default
+- name: external-reader-jwt-client
+  values: external-reader-jwt-client-values.yaml
+  resources:
+  - ConfigMap/fixture-firehose-grpc-config
+  - ConfigMap/fixture-firehose-indexer-config
+  - ConfigMap/fixture-firehose-merger-config
+  - ConfigMap/fixture-firehose-relayer-config
+  - Deployment/fixture-firehose-grpc
+  - Deployment/fixture-firehose-indexer
+  - Deployment/fixture-firehose-merger
+  - Deployment/fixture-firehose-relayer
+  - Service/fixture-firehose-beacon-svc
+  - Service/fixture-firehose-grpc-svc
+  - Service/fixture-firehose-merger-svc
+  - Service/fixture-firehose-relayer-svc
+  - ServiceMonitor/fixture-firehose-grpc-monitor
+  - StatefulSet/fixture-firehose-beacon
+  external_resources:
+  - kind: ServiceAccount
+    name: default
+  - kind: Secret
+    name: fixture-external-engine-jwt
+    keys:
+    - jwt.hex

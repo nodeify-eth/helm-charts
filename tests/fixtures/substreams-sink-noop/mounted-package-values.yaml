@@ -1,0 +1,13 @@
+substreams_sink_noop:
+  config:
+    endpoint: mainnet.eth.streamingfast.io:443
+    manifest: /mnt/spkg/package.spkg
+    module: graph_out
+  volumes:
+  - name: fixture-package
+    secret:
+      secretName: fixture-package
+  volumeMounts:
+  - name: fixture-package
+    mountPath: /mnt/spkg
+    readOnly: true

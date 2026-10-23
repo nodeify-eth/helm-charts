@@ -1,0 +1,6 @@
+fullMode:
+  jwt:
+    existingSecret: fixture-external-engine-jwt
+  components:
+    reader:
+      enabled: false

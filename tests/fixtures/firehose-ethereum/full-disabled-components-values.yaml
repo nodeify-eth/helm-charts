@@ -1,0 +1,16 @@
+fullMode:
+  components:
+    lighthouse:
+      enabled: false
+    reader:
+      enabled: false
+    merger:
+      enabled: false
+    relayer:
+      enabled: false
+    indexer:
+      enabled: false
+    grpc:
+      enabled: false
+    substreams:
+      enabled: false

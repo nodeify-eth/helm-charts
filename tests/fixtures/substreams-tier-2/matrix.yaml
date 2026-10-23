@@ -1,0 +1,39 @@
+chart: substreams-tier-2
+cases:
+- name: default
+  values: default-values.yaml
+  resources:
+  - ConfigMap/fixture-substreams-tier-2-substreams-tier-2-config
+  - Deployment/fixture-substreams-tier-2-substreams-tier-2
+  - Service/fixture-substreams-tier-2-substreams-tier-2-svc
+  external_resources:
+  - kind: ServiceAccount
+    name: default
+- name: hpa-ingress-env
+  values: hpa-ingress-env-values.yaml
+  resources:
+  - ConfigMap/fixture-substreams-tier-2-substreams-tier-2-config
+  - Deployment/fixture-substreams-tier-2-substreams-tier-2
+  - HorizontalPodAutoscaler/fixture-substreams-tier-2-substreams-tier-2-hpa
+  - Ingress/fixture-substreams-tier-2-substreams-tier-2-ingress
+  - Service/fixture-substreams-tier-2-substreams-tier-2-svc
+  - ServiceAccount/fixture-substreams-tier-2
+  external_resources:
+  - kind: Secret
+    name: fixture-tier2-tls
+    keys:
+    - tls.crt
+    - tls.key
+  - kind: Secret
+    name: fixture-env
+    keys:
+    - value
+- name: literal-config
+  values: literal-config-values.yaml
+  resources:
+  - ConfigMap/fixture-substreams-tier-2-substreams-tier-2-config
+  - Deployment/fixture-substreams-tier-2-substreams-tier-2
+  - Service/fixture-substreams-tier-2-substreams-tier-2-svc
+  external_resources:
+  - kind: ServiceAccount
+    name: default
