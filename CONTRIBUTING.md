@@ -82,3 +82,25 @@ branch and validate its current head again.
 
 Enforcing required checks and up-to-date branches in repository rules is an
 owner configuration step beyond this local check.
+
+## Chart documentation
+
+Tier 2 documentation is generated with `helm-docs` **1.14.2**. Put that exact
+version on `PATH`; the wrapper checks its version before rendering.
+
+From the repository root, regenerate the README after reviewing changes to
+`charts/substreams-tier-2/Chart.yaml`, `values.yaml`, or `README.md.gotmpl`:
+
+```sh
+.venv/bin/python .github/scripts/generate_chart_docs.py substreams-tier-2
+.venv/bin/python .github/scripts/generate_chart_docs.py --check substreams-tier-2
+```
+
+The generator accepts the explicit chart name `substreams-tier-2`.
+`--check` reports documentation drift without writing files. Edit the template
+for prose changes and the values comments for configuration descriptions;
+`README.md` is the rendered output. Apply the chart version policy above before
+regenerating so its badge matches the final package version.
+
+The wrapper regression tests use a fake executable in temporary repositories,
+so running the ordinary Python test suite does not require `helm-docs`.
