@@ -1,0 +1,51 @@
+name: Validate Charts
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Tool versions for both CI and the local checks in CONTRIBUTING.md.
+env:
+  PYTHON_VERSION: '3.12'
+  HELM_VERSION: 'v3.17.0'
+
+jobs:
+  validate:
+    name: Validate Charts
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements-dev.txt
+
+      - name: Run regression tests
+        run: .venv/bin/python -m unittest discover -s tests -v
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Lint all charts
+        shell: bash
+        run: |
+          for chart in charts/*/Chart.yaml; do
+            helm lint "${chart%/Chart.yaml}" || exit 1
+          done
