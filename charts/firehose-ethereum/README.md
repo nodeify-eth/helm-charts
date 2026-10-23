@@ -1,6 +1,8 @@
 # firehose-ethereum
 
-![Version: 1.7.2](https://img.shields.io/badge/Version-1.7.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v2.12.4-geth](https://img.shields.io/badge/AppVersion-v2.12.4--geth-informational?style=flat-square)
+![Version: 1.7.3](https://img.shields.io/badge/Version-1.7.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v2.12.4-geth](https://img.shields.io/badge/AppVersion-v2.12.4--geth-informational?style=flat-square)
+
+Metrics Services retain their public `metrics` port (9102) and now target the existing named container port for each selected workload.
 
 A Helm chart for Kubernetes
 
