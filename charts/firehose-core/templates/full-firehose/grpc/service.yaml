@@ -21,6 +21,6 @@ spec:
       protocol: TCP
     - name: metrics
       port: 9102
-      targetPort: metrics
+      targetPort: prom
       protocol: TCP
 {{- end }}

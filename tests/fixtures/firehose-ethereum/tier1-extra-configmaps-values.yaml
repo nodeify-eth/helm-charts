@@ -1,0 +1,13 @@
+fullMode:
+  components:
+    substreams:
+      enabled: true
+      extraConfigMaps:
+      - name: fixture-inline-config
+        mountPath: /fixture/inline
+        data:
+          fixture.yaml: 'enabled: true
+
+            '
+      - name: fixture-external-config
+        mountPath: /fixture/external

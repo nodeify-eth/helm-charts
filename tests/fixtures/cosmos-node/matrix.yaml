@@ -1,0 +1,55 @@
+chart: cosmos-node
+cases:
+- name: default
+  values: default-values.yaml
+  resources:
+  - ConfigMap/fixture-cosmos-node-scripts
+  - Role/fixture-cosmos-node
+  - RoleBinding/fixture-cosmos-node
+  - Service/fixture-cosmos-node
+  - Service/fixture-cosmos-node-headless
+  - ServiceAccount/fixture-cosmos-node
+  - StatefulSet/fixture-cosmos-node
+- name: integration-options
+  values: integration-options-values.yaml
+  resources:
+  - ConfigMap/fixture-cosmos-node-scripts
+  - HorizontalPodAutoscaler/fixture-cosmos-node
+  - Ingress/fixture-cosmos-node
+  - NetworkPolicy/fixture-cosmos-node
+  - PodDisruptionBudget/fixture-cosmos-node
+  - Role/fixture-cosmos-node
+  - RoleBinding/fixture-cosmos-node
+  - Service/fixture-cosmos-node
+  - Service/fixture-cosmos-node-headless
+  - ServiceAccount/fixture-cosmos-node
+  - StatefulSet/fixture-cosmos-node
+  external_resources:
+  - kind: Secret
+    name: fixture-cosmos-tls
+    keys:
+    - tls.crt
+    - tls.key
+- name: custom-ports
+  values: custom-ports-values.yaml
+  resources:
+  - ConfigMap/fixture-cosmos-node-scripts
+  - Role/fixture-cosmos-node
+  - RoleBinding/fixture-cosmos-node
+  - Service/fixture-cosmos-node
+  - Service/fixture-cosmos-node-headless
+  - ServiceAccount/fixture-cosmos-node
+  - StatefulSet/fixture-cosmos-node
+- name: state-sync
+  values: state-sync-values.yaml
+  resources:
+  - ConfigMap/fixture-cosmos-node-scripts
+  - Role/fixture-cosmos-node
+  - RoleBinding/fixture-cosmos-node
+  - Service/fixture-cosmos-node
+  - Service/fixture-cosmos-node-headless
+  - ServiceAccount/fixture-cosmos-node
+  - StatefulSet/fixture-cosmos-node
+- name: persistence-disabled
+  values: persistence-disabled-values.yaml
+  error_contains: Persistence must be enabled

@@ -1,0 +1,10 @@
+fullMode:
+  components:
+    lighthouse:
+      enabled: false
+    opNode:
+      enabled: true
+      config:
+        l1: https://ethereum-rpc.publicnode.com
+        l1Beacon: https://ethereum-beacon-api.publicnode.com
+        l1BeaconArchiver: https://ethereum-beacon-api.publicnode.com

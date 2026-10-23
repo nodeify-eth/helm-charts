@@ -1,0 +1,9 @@
+global:
+  namespace: fixture-signers
+monitoring:
+  serviceMonitor:
+    enabled: true
+  vmServiceScrape:
+    enabled: true
+networkPolicy:
+  enabled: true

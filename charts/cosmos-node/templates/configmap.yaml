@@ -49,6 +49,13 @@ data:
         local downloaded_genesis="$CONFIG_DIR/genesis.json.downloaded"
         
         if [ -f "$downloaded_genesis" ]; then
+            {{- if .Values.bootstrap.genesis.checksum }}
+            if echo "{{ .Values.bootstrap.genesis.checksum }}  $downloaded_genesis" | sha256sum -c -; then
+                log "Cached genesis checksum verified" "$GREEN"
+            else
+                error_exit "Cached genesis checksum verification failed for $downloaded_genesis. Verify bootstrap.genesis.checksum and the cached file; after confirming the correct genesis, move the cached file aside manually and retry. Existing files have been preserved."
+            fi
+            {{- end }}
             log "Genesis file already downloaded, skipping download" "$YELLOW"
             return 0
         fi
@@ -65,7 +72,6 @@ data:
                 log "Downloaded genesis file size: $file_size bytes" "$BLUE"
                 if [ "$file_size" -gt 10000000 ]; then
                     if head -c 1 "$downloaded_genesis.tmp" | grep -q '{'; then
-                        mv "$downloaded_genesis.tmp" "$downloaded_genesis"
                         log "Large genesis file downloaded successfully" "$GREEN"
                     else
                         log "Downloaded file doesn't appear to be JSON, retrying..." "$YELLOW"
@@ -74,7 +80,6 @@ data:
                     fi
                 else
                     if jq empty "$downloaded_genesis.tmp" 2>/dev/null; then
-                        mv "$downloaded_genesis.tmp" "$downloaded_genesis"
                         log "Genesis file downloaded and validated successfully" "$GREEN"
                     else
                         log "Downloaded genesis file is not valid JSON, retrying..." "$YELLOW"
@@ -84,12 +89,14 @@ data:
                 fi
                 {{- if .Values.bootstrap.genesis.checksum }}
                 # Verify checksum if provided
-                if echo "{{ .Values.bootstrap.genesis.checksum }}  $genesis_file" | sha256sum -c -; then
+                if echo "{{ .Values.bootstrap.genesis.checksum }}  $downloaded_genesis.tmp" | sha256sum -c -; then
                     log "Genesis checksum verified" "$GREEN"
                 else
+                    rm -f "$downloaded_genesis.tmp"
                     error_exit "Genesis checksum verification failed"
                 fi
                 {{- end }}
+                mv "$downloaded_genesis.tmp" "$downloaded_genesis"
                 return 0
             else
                 log "Failed to download genesis (attempt $((retry+1))/$max_retries)" "$YELLOW"

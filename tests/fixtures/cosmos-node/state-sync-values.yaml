@@ -1,0 +1,7 @@
+bootstrap:
+  snapshot:
+    enabled: false
+  stateSync:
+    enabled: true
+    rpcServer: https://cosmos-rpc.polkachu.com:443
+    trustHeightOffset: 2000

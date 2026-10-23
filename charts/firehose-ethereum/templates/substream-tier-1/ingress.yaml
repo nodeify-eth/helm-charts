@@ -1,4 +1,7 @@
 {{- $values := $.Values.fullMode.components.substreams }}
+{{- if and $values.enabled $values.ingress.enabled (ne .Values.mode "full") }}
+{{- fail "fullMode.components.substreams.ingress.enabled requires mode=full; disable this full-mode ingress or use mode=full" }}
+{{- end }}
 {{- $componentName := "substreams-tier-1" }}
 {{- $componentLabel := include "firehose-ethereum.componentLabelFor" $componentName }}
 {{- if and $values.enabled $values.ingress.enabled (hasKey $values "ingress") (hasKey $values.ingress "host") }}

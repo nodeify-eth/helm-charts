@@ -27,10 +27,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/jwt-secret: {{ include (print $.Template.BasePath "/full-firehose/reader/jwt-secret.yaml") . | sha256sum }}
-        {{- with $values.components.lighthouse.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+        {{- include "firehose-ethereum.jwt.annotations" (dict "root" . "annotations" $values.components.lighthouse.podAnnotations) | nindent 8 }}
       labels:
         {{- include "firehose-ethereum.selectorLabels" . | nindent 8 }}
         {{- $componentLabel | nindent 8 }}
@@ -93,5 +90,5 @@ spec:
       volumes:
         - name: jwt-secret
           secret:
-            secretName: {{ .Release.Name }}-firehose-jwt
+            secretName: {{ include "firehose-ethereum.jwt.name" . | quote }}
 {{- end }}

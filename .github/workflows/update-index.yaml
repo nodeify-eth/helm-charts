@@ -6,24 +6,40 @@ on:
     paths:
       - 'charts/**'
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
     paths:
       - 'charts/**'
+
+permissions:
+  contents: read
 
 jobs:
   bump-version:
     name: Bump Chart Version
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]' &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: chart-bump-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
     permissions:
       contents: write
-      pull-requests: write
+      pull-requests: read
+    env:
+      REPOSITORY: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      BASE_REF: ${{ github.base_ref }}
+      HEAD_REF: ${{ github.head_ref }}
+      EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for appVersion changes
@@ -67,6 +83,10 @@ jobs:
               
               # Get current version
               current_version=$(grep "^version:" "$chart_yaml" | sed 's/version: //' | tr -d '"' | tr -d "'")
+              if ! [[ "$current_version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+                echo "Manually bump chart version for prerelease, build metadata, or invalid version: $chart_yaml" >&2
+                exit 1
+              fi
               
               # Split into components
               IFS='.' read -r major minor patch <<< "$current_version"
@@ -85,15 +105,28 @@ jobs:
           if git diff --staged --quiet; then
             echo "No chart versions to bump"
           else
-            git commit -m "chore: Bump chart versions for Docker image updates"
-            # Use the provided token for authentication
-            git push https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.head_ref }}
+            echo "Chart version candidate staged; live PR checks and version validation must pass before push"
           fi
+
+      - name: Set up Python for candidate validation
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install candidate validation dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements-dev.txt
+
+      - name: Validate and publish candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .venv/bin/python .github/scripts/chart_pr_automation.py publish-bump
 
   release:
     name: Release Charts
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
@@ -111,7 +144,7 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v5
         with:
-          version: 'latest'
+          version: 'v3.17.0'
 
       - name: Add Helm repositories
         run: |

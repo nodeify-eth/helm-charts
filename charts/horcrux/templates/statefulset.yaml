@@ -1,3 +1,6 @@
+{{- if not .Values.persistence.enabled }}
+{{- fail "Horcrux requires persistence.enabled=true to preserve signing state; enable persistence and configure a persistent volume for validator state." }}
+{{- end }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:

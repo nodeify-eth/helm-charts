@@ -1,0 +1,19 @@
+chain:
+  ports:
+    p2p: 27656
+    rpc: 27657
+    grpc: 9190
+    api: 1417
+    prometheus: 27660
+service:
+  ports:
+    p2p:
+      port: 27656
+    rpc:
+      port: 27657
+    grpc:
+      port: 9190
+    api:
+      port: 1417
+    prometheus:
+      port: 27660

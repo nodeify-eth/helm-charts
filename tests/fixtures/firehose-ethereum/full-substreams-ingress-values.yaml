@@ -1,0 +1,11 @@
+fullMode:
+  components:
+    substreams:
+      enabled: true
+      ingress:
+        enabled: true
+        host: substreams.example.com
+    grpc:
+      ingress:
+        enabled: true
+        host: firehose.example.com

@@ -1,0 +1,151 @@
+chart: horcrux
+cases:
+- name: threshold
+  values: threshold-values.yaml
+  resources:
+  - ConfigMap/fixture-horcrux-config
+  - PodDisruptionBudget/fixture-horcrux
+  - Role/fixture-horcrux
+  - RoleBinding/fixture-horcrux
+  - Service/fixture-horcrux-headless
+  - Service/fixture-horcrux-metrics
+  - ServiceAccount/fixture-horcrux
+  - StatefulSet/fixture-horcrux
+  external_resources:
+  - kind: Secret
+    name: horcrux-shard-1
+    keys:
+    - cosmoshub-4_shard.json
+    - ecies_keys.json
+    - cosmoshub-4_priv_validator_state.json
+  - kind: Secret
+    name: horcrux-shard-2
+    keys:
+    - cosmoshub-4_shard.json
+    - ecies_keys.json
+    - cosmoshub-4_priv_validator_state.json
+  - kind: Secret
+    name: horcrux-shard-3
+    keys:
+    - cosmoshub-4_shard.json
+    - ecies_keys.json
+    - cosmoshub-4_priv_validator_state.json
+- name: single
+  values: single-values.yaml
+  resources:
+  - ConfigMap/fixture-horcrux-config
+  - PodDisruptionBudget/fixture-horcrux
+  - Role/fixture-horcrux
+  - RoleBinding/fixture-horcrux
+  - Service/fixture-horcrux-headless
+  - Service/fixture-horcrux-metrics
+  - ServiceAccount/fixture-horcrux
+  - StatefulSet/fixture-horcrux
+  external_resources:
+  - kind: Secret
+    name: horcrux-shard-1
+    keys:
+    - cosmoshub-4_shard.json
+    - ecies_keys.json
+    - cosmoshub-4_priv_validator_state.json
+  - kind: Secret
+    name: horcrux-shard-2
+    keys:
+    - cosmoshub-4_shard.json
+    - ecies_keys.json
+    - cosmoshub-4_priv_validator_state.json
+  - kind: Secret
+    name: horcrux-shard-3
+    keys:
+    - cosmoshub-4_shard.json
+    - ecies_keys.json
+    - cosmoshub-4_priv_validator_state.json
+- name: external-secret-ids
+  values: external-secret-ids-values.yaml
+  resources:
+  - ConfigMap/fixture-horcrux-config
+  - ExternalSecret/fixture-horcrux-shard-2
+  - ExternalSecret/fixture-horcrux-shard-4
+  - ExternalSecret/fixture-horcrux-shard-7
+  - PodDisruptionBudget/fixture-horcrux
+  - Role/fixture-horcrux
+  - RoleBinding/fixture-horcrux
+  - Service/fixture-horcrux-headless
+  - Service/fixture-horcrux-metrics
+  - ServiceAccount/fixture-horcrux
+  - StatefulSet/fixture-horcrux
+  external_resources:
+  - kind: ClusterSecretStore
+    name: fixture-store
+- name: monitoring-policy-namespace
+  values: monitoring-policy-namespace-values.yaml
+  namespace: fixture-signers
+  resources:
+  - ConfigMap/fixture-horcrux-config
+  - NetworkPolicy/fixture-horcrux
+  - PodDisruptionBudget/fixture-horcrux
+  - Role/fixture-horcrux
+  - RoleBinding/fixture-horcrux
+  - Service/fixture-horcrux-headless
+  - Service/fixture-horcrux-metrics
+  - ServiceAccount/fixture-horcrux
+  - ServiceMonitor/fixture-horcrux
+  - StatefulSet/fixture-horcrux
+  - VMServiceScrape/fixture-horcrux
+  external_resources:
+  - kind: Secret
+    name: horcrux-shard-1
+    keys:
+    - cosmoshub-4_shard.json
+    - ecies_keys.json
+    - cosmoshub-4_priv_validator_state.json
+  - kind: Secret
+    name: horcrux-shard-2
+    keys:
+    - cosmoshub-4_shard.json
+    - ecies_keys.json
+    - cosmoshub-4_priv_validator_state.json
+  - kind: Secret
+    name: horcrux-shard-3
+    keys:
+    - cosmoshub-4_shard.json
+    - ecies_keys.json
+    - cosmoshub-4_priv_validator_state.json
+- name: metrics-disabled
+  values: metrics-disabled-values.yaml
+  resources:
+  - ConfigMap/fixture-horcrux-config
+  - PodDisruptionBudget/fixture-horcrux
+  - Role/fixture-horcrux
+  - RoleBinding/fixture-horcrux
+  - Service/fixture-horcrux-headless
+  - ServiceAccount/fixture-horcrux
+  - StatefulSet/fixture-horcrux
+  external_resources:
+  - kind: Secret
+    name: horcrux-shard-1
+    keys:
+    - cosmoshub-4_shard.json
+    - ecies_keys.json
+    - cosmoshub-4_priv_validator_state.json
+  - kind: Secret
+    name: horcrux-shard-2
+    keys:
+    - cosmoshub-4_shard.json
+    - ecies_keys.json
+    - cosmoshub-4_priv_validator_state.json
+  - kind: Secret
+    name: horcrux-shard-3
+    keys:
+    - cosmoshub-4_shard.json
+    - ecies_keys.json
+    - cosmoshub-4_priv_validator_state.json
+- name: persistence-disabled
+  values: persistence-disabled-values.yaml
+  error_contains: persistence.enabled=true
+- name: invalid-threshold
+  values: invalid-threshold-values.yaml
+  error_contains: threshold cannot be greater than replicaCount
+- name: external-count-mismatch
+  values: external-count-mismatch-values.yaml
+  error_contains: Number of shardConfigs (2) must match replicaCount (3)

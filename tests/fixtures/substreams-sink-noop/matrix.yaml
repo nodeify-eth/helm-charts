@@ -1,0 +1,41 @@
+chart: substreams-sink-noop
+cases:
+- name: public-minimal
+  values: public-minimal-values.yaml
+  resources:
+  - Deployment/fixture-substreams-sink-noop
+  - Service/fixture-substreams-sink-noop
+  external_resources:
+  - kind: ServiceAccount
+    name: default
+- name: cursor-monitoring
+  values: cursor-monitoring-values.yaml
+  resources:
+  - Deployment/fixture-substreams-sink-noop
+  - Service/fixture-substreams-sink-noop
+  - ServiceAccount/fixture-substreams-sink-noop
+  - ServiceMonitor/fixture-substreams-sink-noop
+- name: mounted-package
+  values: mounted-package-values.yaml
+  resources:
+  - Deployment/fixture-substreams-sink-noop
+  - Service/fixture-substreams-sink-noop
+  external_resources:
+  - kind: ServiceAccount
+    name: default
+  - kind: Secret
+    name: fixture-package
+    keys:
+    - package.spkg
+- name: defaults-missing-required
+  values: defaults-missing-required-values.yaml
+  error_contains: config.manifest is required
+- name: missing-manifest
+  values: missing-manifest-values.yaml
+  error_contains: config.manifest is required
+- name: missing-module
+  values: missing-module-values.yaml
+  error_contains: config.module is required
+- name: missing-endpoint
+  values: missing-endpoint-values.yaml
+  error_contains: config.endpoint is required

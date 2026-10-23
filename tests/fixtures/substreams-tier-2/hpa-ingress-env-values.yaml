@@ -1,0 +1,25 @@
+serviceAccount:
+  create: true
+substreams_tier_2:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  autoscaling:
+    enabled: true
+  ingress:
+    enabled: true
+    host: tier2.example.com
+    tls:
+      enabled: true
+      secretName: fixture-tier2-tls
+  env:
+    enabled: true
+    variables:
+    - name: FIXTURE_VALUE
+      value: fixture
+    - name: FIXTURE_FROM_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: fixture-env
+          key: value

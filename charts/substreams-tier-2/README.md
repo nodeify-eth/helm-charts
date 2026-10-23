@@ -1,6 +1,6 @@
 # substreams-tier-2
 
-![Version: 0.0.8](https://img.shields.io/badge/Version-0.0.8-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v2.12.4](https://img.shields.io/badge/AppVersion-v2.12.4-informational?style=flat-square)
+![Version: 1.1.7](https://img.shields.io/badge/Version-1.1.7-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v2.24.1](https://img.shields.io/badge/AppVersion-v2.24.1-informational?style=flat-square)
 
 A Helm chart for deploying substreams-tier-2
 

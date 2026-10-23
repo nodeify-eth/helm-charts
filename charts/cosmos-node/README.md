@@ -1,7 +1,7 @@
 # Cosmos Node Helm Chart
 
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/cosmos-node)](https://artifacthub.io/packages/search?repo=cosmos-node)
-[![Helm Chart Version](https://img.shields.io/badge/chart-2.0.0-blue)](https://github.com/cosmos/helm-charts)
+[![Helm Chart Version](https://img.shields.io/badge/chart-2.6.3-blue)](https://github.com/nodeify-eth/helm-charts)
 
 A professional, production-ready Helm chart for deploying Cosmos SDK blockchain nodes with enterprise-grade features and security.
 
@@ -37,22 +37,29 @@ This chart deploys a StatefulSet with:
 
 ```bash
 # Add the repository
-helm repo add cosmos-node https://charts.cosmos.network
+helm repo add nodeify https://nodeify-eth.github.io/helm-charts
 helm repo update
 
 # Install Cosmos Hub
-helm install my-cosmos-node cosmos-node/cosmos-node
+helm install my-cosmos-node nodeify/cosmos-node
 
-# Install with custom values
-helm install my-cosmos-node cosmos-node/cosmos-node -f my-values.yaml
+# Preview the checked-out chart locally (from the repository root)
+helm template my-cosmos-node ./charts/cosmos-node
+
+# Install with custom values (save the Cosmos Hub example below as my-values.yaml)
+helm install my-cosmos-node nodeify/cosmos-node -f my-values.yaml
 ```
+
+The basic installation uses Cosmos Hub defaults and needs no secret values. Before installing, verify that your cluster has a suitable StorageClass and sufficient capacity, and that the selected image, genesis, peers, and snapshot match the target network. The public bootstrap services must be reachable; these examples demonstrate manifest rendering, not a verified live installation or sync.
+
+The YAML below is a complete values override for the quick start. The remaining YAML snippets illustrate individual settings to merge into your values file; custom-chain URLs, peer addresses, and state-sync trust data are examples to replace with current values for your network.
 
 ### Example Configurations
 
 #### Cosmos Hub (Mainnet)
 ```yaml
 chain:
-  name: "cosmos"
+  name: "cosmoshub"
   chainId: "cosmoshub-4"
   daemon: "gaiad"
   home: ".gaia"
@@ -60,6 +67,8 @@ chain:
   denom: "uatom"
 
 bootstrap:
+  genesis:
+    url: "https://snapshots.polkachu.com/genesis/cosmos/genesis.json"
   snapshot:
     enabled: true
     command: "curl -s https://polkachu.com/api/v2/chain_snapshots/cosmos/mainnet | jq -r .snapshot.url"
@@ -76,6 +85,7 @@ resources:
     memory: 48Gi
 
 persistence:
+  enabled: true
   size: 500Gi
 
 daemon:
@@ -185,7 +195,7 @@ image:
 bootstrap:
   genesis:
     url: "https://example.com/genesis.json"
-    checksum: "sha256:abcd1234..."
+    checksum: "abcd1234..."  # Replace with the complete raw SHA256 hex digest
   seeds:
     list: "seed1@1.2.3.4:26656,seed2@5.6.7.8:26656"
   snapshot:
@@ -394,13 +404,13 @@ daemon:
 ### Chart Upgrades
 
 ```bash
-# Upgrade to new chart version
-helm upgrade my-cosmos-node cosmos-node/cosmos-node --version 2.1.0
+# Upgrade using the same reviewed values
+helm repo update
+helm upgrade my-cosmos-node nodeify/cosmos-node -f my-values.yaml
 
-# Upgrade with new image
-helm upgrade my-cosmos-node cosmos-node/cosmos-node \
-  --set image.tag=v19.0.0 \
-  --set chain.chainId=cosmoshub-5
+# Upgrade with an image version reviewed for the existing chain
+helm upgrade my-cosmos-node nodeify/cosmos-node -f my-values.yaml \
+  --set-string image.tag=v25.1.0
 ```
 
 ### Data Migration
@@ -487,7 +497,7 @@ helm install test . --dry-run --debug
 
 ## 📝 License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+The chart metadata declares [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
 ## 🙏 Acknowledgments
 
@@ -497,10 +507,19 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/cosmos/helm-charts/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/cosmos/helm-charts/discussions)
-- **Discord**: [Cosmos Developer Discord](https://discord.gg/cosmosnetwork)
+- **Issues**: [GitHub Issues](https://github.com/nodeify-eth/helm-charts/issues)
+- **Chart source and documentation**: [Nodeify Helm Charts](https://github.com/nodeify-eth/helm-charts)
+- **Helm repository**: [Nodeify Charts](https://nodeify-eth.github.io/helm-charts)
+- **Upstream Cosmos SDK community**: [Cosmos Developer Discord](https://discord.gg/cosmosnetwork)
 
 ---
 
 *Made with ❤️ by the Cosmos community*
+
+### Compatibility note for 2.6.2
+
+Genesis checksum validation now checks the downloaded genesis file before the entrypoint moves it to `genesis.json`. Supply the raw SHA256 hex digest in `bootstrap.genesis.checksum`; leaving it empty continues to skip checksum validation. Bootstrap paths and initialization order are unchanged.
+
+### Compatibility note for 2.6.3
+
+With `bootstrap.genesis.checksum` configured, new genesis downloads are checked before becoming `genesis.json.downloaded`, and cached downloads are checked against the current digest on every download-helper invocation. A mismatched cache stops initialization and is preserved: verify the configured digest and cached file, then move the cache aside manually before retrying with the correct genesis. Empty-checksum behavior and the final `genesis.json` are unchanged.

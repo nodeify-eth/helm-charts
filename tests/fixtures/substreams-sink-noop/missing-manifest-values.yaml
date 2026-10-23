@@ -1,0 +1,5 @@
+substreams_sink_noop:
+  config:
+    endpoint: mainnet.eth.streamingfast.io:443
+    manifest: ''
+    module: graph_out

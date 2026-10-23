@@ -35,6 +35,11 @@ commonConfig:
 mode: full
 
 fullMode:
+  jwt:
+    # -- External Secret in the release namespace containing jwt.hex (64 ASCII hex characters); required for offline/GitOps use. Use a different name from the managed Secret.
+    existingSecret: ""
+    # -- Public rollout token for coordinated JWT restarts; never put credential material here.
+    revision: ""
   # -- Storage configuration for full mode
   storage:
     lighthouse:

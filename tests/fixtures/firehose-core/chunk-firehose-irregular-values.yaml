@@ -1,0 +1,10 @@
+mode: chunk
+chunkMode:
+  method: firehose
+  chunkConfig:
+    startBlock: 137
+    stopBlock: 2437
+    workers: 3
+  components:
+    remoteFirehose:
+      endpoint: mainnet.eth.streamingfast.io:443
