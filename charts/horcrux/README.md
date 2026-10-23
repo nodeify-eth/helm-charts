@@ -1,8 +1,10 @@
 # horcrux
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v3.3.2](https://img.shields.io/badge/AppVersion-v3.3.2-informational?style=flat-square)
+![Version: 1.0.9](https://img.shields.io/badge/Version-1.0.9-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v3.3.2](https://img.shields.io/badge/AppVersion-v3.3.2-informational?style=flat-square)
 
 A production-grade Helm chart for deploying Horcrux remote signer for Cosmos chains
+
+As of chart version 1.0.9, `persistence.enabled=false` fails rendering. Keep `persistence.enabled=true` (the default) and configure persistent storage to preserve validator signing state.
 
 **Homepage:** <https://github.com/strangelove-ventures/horcrux>
 
