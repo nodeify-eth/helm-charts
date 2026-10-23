@@ -1,8 +1,38 @@
 # firehose-ethereum
 
-![Version: 0.3.2](https://img.shields.io/badge/Version-0.3.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v2.12.4-geth](https://img.shields.io/badge/AppVersion-v2.12.4--geth-informational?style=flat-square)
+![Version: 1.7.2](https://img.shields.io/badge/Version-1.7.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v2.12.4-geth](https://img.shields.io/badge/AppVersion-v2.12.4--geth-informational?style=flat-square)
 
 A Helm chart for Kubernetes
+
+## JWT lifecycle and migration
+
+Full mode uses one Engine API credential shared by reader, Lighthouse and (when enabled) op-node. The fixed Secret key is `jwt.hex`, mounted read-only at `/jwt/jwt.hex`; its decoded value must be exactly 64 ASCII hexadecimal characters. Chunk mode and full mode with all JWT consumers disabled do not resolve or create JWT credentials.
+
+| Value | Default | Purpose |
+| --- | --- | --- |
+| `fullMode.jwt.existingSecret` | `""` | Namespace-local external Secret, provisioned before consumers start; use a name different from `<release>-firehose-jwt`. |
+| `fullMode.jwt.revision` | `""` | Public, nonsecret token to trigger coordinated consumer restarts. Never put credential material here. |
+
+With an empty `existingSecret`, a connected first install creates `<release>-firehose-jwt` from 32 cryptographically random bytes. Connected upgrades preserve valid existing bytes exactly. This includes legacy Ethereum credentials derived from public release metadata: upgrading this chart **does not remediate those weak credentials**. Review Engine API exposure and plan a separate coordinated rotation. Invalid data or a missing managed Secret during upgrade fails closed; securely restore the original Secret or provision a new external Secret and select it. This also applies when enabling a previously disabled reader on upgrade. Normal uninstall removes the managed Secret; reinstall creates a new identity.
+
+When reader is disabled and any JWT client is enabled, `existingSecret` is required, even if the client's replicas are zero. Coordinate the credential with the external execution engine. External mode emits no managed JWT Secret and performs no lookup or live validation of its presence/content. The provisioning system must validate the fixed key/format and ensure the Secret exists before Pods start.
+
+### Offline rendering and permissions
+
+Use an external Secret for offline rendering and GitOps. Identical external name/revision values render deterministically. Managed install previews generate fresh random credentials and cannot establish the eventual installed identity. Client `helm template` and client dry-runs cannot read live Secrets; managed `--is-upgrade` rendering therefore fails when lookup finds no Secret. A renderer that always presents an install cannot detect an upgrade: GitOps must use `existingSecret` rather than relying on this guard.
+
+Connected Helm lookup needs the rendering identity to GET the named Secret in the release namespace; the workload service account is not that identity. API/RBAC errors propagate as rendering failures. Server-side dry-run can exercise lookup only with appropriate cluster connectivity and permissions. Avoid logging rendered Secret manifests or credential bytes during validation.
+
+The chart reserves pod annotation keys `checksum/jwt-secret` and `firehose.streamingfast.io/jwt-revision`; setting either through consumer `podAnnotations` fails. Managed checksums cover credential bytes only and are consistent across consumers. External mode uses the revision token instead of reading or hashing the external Secret. These annotations trigger restarts but do not guarantee their order or that an engine reloads a projected file.
+
+### Migration and coordinated rotation
+
+1. Before moving from managed to external ownership, securely provision a **new Secret name** with the current credential through your secret-management system. Do not print keys or Secret manifests. Setting `existingSecret` to the managed name is rejected: removing the managed resource from Helm's desired manifests can delete it. No automatic adoption or keep policy is provided.
+2. Plan a maintenance window and rehearse how to stop engine clients and suspend any reconciliation that would restart them. Core's Lighthouse StatefulSet has no configurable replicas value; do not assume a values-only procedure can stop it. Coordinate external engine owners as applicable.
+3. Select the new external Secret consistently for the reader and all clients. For rotation, provision fresh cryptographically random material in another new external Secret; stop clients, restart the reader with that credential, and wait for readiness before restarting clients with the same credential. A single Helm upgrade or revision change does not guarantee this sequence.
+4. Verify real Engine API authentication and synchronization before resuming normal operation. In-place Secret changes also require a rehearsed restart sequence; projected-volume updates alone do not prove binary reload. Keep the prior credential securely for the agreed rollback window, and roll back credentials and consumers together. Helm rollback can restore historical manifests and credentials.
+
+Connected install/upgrade preservation, denied lookup, actual external ownership transition, revision rollouts, rollback, real-engine authentication and restart ordering have **not been rehearsed by this change**. Offline rendering and synthetic lookup regression tests do not substitute for an approved disposable-environment rehearsal. This runbook describes required coordination, not a proven production deployment procedure.
 
 ## Values
 

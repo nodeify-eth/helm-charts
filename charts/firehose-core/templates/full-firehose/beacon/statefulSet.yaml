@@ -25,10 +25,8 @@ spec:
             storage: {{ $.Values.fullMode.storage.lighthouse.size | quote }}
   template:
     metadata:
-      {{- with $values.components.lighthouse.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "firehose-core.jwt.annotations" (dict "root" . "annotations" $values.components.lighthouse.podAnnotations) | nindent 8 }}
       labels:
         {{- include "firehose-ethereum.selectorLabels" . | nindent 8 }}
         {{- $componentLabel | nindent 8 }}
@@ -76,6 +74,6 @@ spec:
       volumes:
         - name: jwt-secret
           secret:
-            secretName: {{ .Release.Name }}-firehose-jwt
+            secretName: {{ include "firehose-core.jwt.name" . | quote }}
 
 {{- end }}

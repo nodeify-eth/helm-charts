@@ -26,10 +26,8 @@ spec:
   replicas: {{ $values.components.reader.replicas }}
   template:
     metadata:
-      {{- with $values.components.reader.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "firehose-core.jwt.annotations" (dict "root" . "annotations" $values.components.reader.podAnnotations) | nindent 8 }}
       labels:
         {{- include "firehose-ethereum.selectorLabels" . | nindent 8 }}
         {{- $componentLabel | nindent 8 }}
@@ -77,5 +75,5 @@ spec:
             name: {{ .Release.Name }}-firehose-{{ $componentName }}-config
         - name: jwt-secret
           secret:
-            secretName: {{ .Release.Name }}-firehose-jwt
+            secretName: {{ include "firehose-core.jwt.name" . | quote }}
 {{- end }}
