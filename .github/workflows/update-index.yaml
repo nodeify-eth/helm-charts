@@ -126,7 +126,7 @@ jobs:
   release:
     name: Release Charts
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
@@ -144,7 +144,7 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v5
         with:
-          version: 'latest'
+          version: 'v3.17.0'
 
       - name: Add Helm repositories
         run: |
