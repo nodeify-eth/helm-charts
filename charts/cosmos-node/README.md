@@ -1,7 +1,7 @@
 # Cosmos Node Helm Chart
 
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/cosmos-node)](https://artifacthub.io/packages/search?repo=cosmos-node)
-[![Helm Chart Version](https://img.shields.io/badge/chart-2.6.2-blue)](https://github.com/nodeify-eth/helm-charts)
+[![Helm Chart Version](https://img.shields.io/badge/chart-2.6.3-blue)](https://github.com/nodeify-eth/helm-charts)
 
 A professional, production-ready Helm chart for deploying Cosmos SDK blockchain nodes with enterprise-grade features and security.
 
@@ -519,3 +519,7 @@ The chart metadata declares [Apache License 2.0](https://www.apache.org/licenses
 ### Compatibility note for 2.6.2
 
 Genesis checksum validation now checks the downloaded genesis file before the entrypoint moves it to `genesis.json`. Supply the raw SHA256 hex digest in `bootstrap.genesis.checksum`; leaving it empty continues to skip checksum validation. Bootstrap paths and initialization order are unchanged.
+
+### Compatibility note for 2.6.3
+
+With `bootstrap.genesis.checksum` configured, new genesis downloads are checked before becoming `genesis.json.downloaded`, and cached downloads are checked against the current digest on every download-helper invocation. A mismatched cache stops initialization and is preserved: verify the configured digest and cached file, then move the cache aside manually before retrying with the correct genesis. Empty-checksum behavior and the final `genesis.json` are unchanged.
