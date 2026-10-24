@@ -13,7 +13,7 @@ the Ubuntu runner supplies `sh`, `jq`, and `sha256sum`.
 From the repository root, create an isolated Python environment and run:
 
 ```sh
-python3.12 -m venv .venv
+python3.15 -m venv .venv
 .venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -m unittest discover -s tests -v
 for chart in charts/*/Chart.yaml; do
