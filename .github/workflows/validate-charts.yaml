@@ -14,7 +14,7 @@ permissions:
 # Tool versions for both CI and the local checks in CONTRIBUTING.md.
 env:
   PYTHON_VERSION: '3.12'
-  HELM_VERSION: 'v3.17.0'
+  HELM_VERSION: 'v3.22.1'
 
 jobs:
   validate:
@@ -81,6 +81,69 @@ jobs:
           for chart in charts/*/Chart.yaml; do
             helm lint "${chart%/Chart.yaml}" || exit 1
           done
+
+      - name: Smoke test chart packages and index
+        shell: bash
+        run: |
+          set -euo pipefail
+          SMOKE_DIR=$(mktemp -d "$RUNNER_TEMP/chart-packages.XXXXXX")
+          export SMOKE_DIR
+          trap 'rm -rf "$SMOKE_DIR"' EXIT
+          for chart in charts/*/Chart.yaml; do
+            helm package "${chart%/Chart.yaml}" --destination "$SMOKE_DIR" >/dev/null
+          done
+          helm repo index "$SMOKE_DIR" --url https://example.invalid/charts >/dev/null
+          .venv/bin/python - <<'PYTHON'
+          import hashlib
+          import os
+          from pathlib import Path
+          import subprocess
+
+          import yaml
+
+
+          def require(condition, message):
+              if not condition:
+                  raise SystemExit(message)
+
+
+          sources = sorted(Path('charts').glob('*/Chart.yaml'))
+          require(len(sources) == 6, 'Expected six source charts')
+          expected = {}
+          for source in sources:
+              metadata = yaml.safe_load(source.read_text())
+              name, version = metadata['name'], str(metadata['version'])
+              require(name not in expected, 'Source chart names must be unique')
+              expected[name] = version
+
+          packages = Path(os.environ['SMOKE_DIR'])
+          index = yaml.safe_load((packages / 'index.yaml').read_text())
+          entries = index.get('entries', {})
+          require(set(entries) == set(expected), 'Index chart names differ from source charts')
+          archives = set(packages.glob('*.tgz'))
+          require(len(archives) == len(expected), 'Package archive count differs from source charts')
+          referenced = set()
+          for name, version in expected.items():
+              require(len(entries[name]) == 1, 'Expected exactly one index entry per chart')
+              entry = entries[name][0]
+              require(entry['name'] == name and str(entry['version']) == version,
+                      'Index chart metadata differs from source')
+              archive = packages / f'{name}-{version}.tgz'
+              require(archive.is_file(), 'Index chart archive is missing')
+              require(entry['urls'] == [f'https://example.invalid/charts/{archive.name}'],
+                      'Index URL differs from the local dummy repository URL')
+              require(entry['digest'] == hashlib.sha256(archive.read_bytes()).hexdigest(),
+                      'Index digest differs from packaged archive')
+              shown = subprocess.run(['helm', 'show', 'chart', str(archive)],
+                                     capture_output=True, text=True)
+              require(shown.returncode == 0, 'helm show chart failed')
+              packaged = yaml.safe_load(shown.stdout)
+              require(packaged['name'] == name and str(packaged['version']) == version,
+                      'Packaged chart metadata differs from source')
+              referenced.add(archive)
+          require(referenced == archives, 'Unreferenced package archives exist')
+          print('Package/index smoke passed for six charts')
+          PYTHON
 
       - name: Confirm PR snapshot is still current
         if: github.event_name == 'pull_request'
