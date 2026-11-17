@@ -26,7 +26,7 @@ jobs:
       group: chart-bump-${{ github.event.pull_request.number }}
       cancel-in-progress: false
     permissions:
-      contents: write
+      contents: read
       pull-requests: read
     env:
       REPOSITORY: ${{ github.repository }}
@@ -35,8 +35,9 @@ jobs:
       HEAD_REF: ${{ github.head_ref }}
       EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
-      # A push authenticated as GITHUB_TOKEN does not start pull_request
-      # workflows, so Validate Charts would stay on the pre-bump SHA.
+      # A GITHUB_TOKEN push does not start pull_request workflows, so the
+      # version commit is pushed with an app token. That token is not stored
+      # on the PR checkout: same-repo PRs can change requirements and scripts.
       - name: Create chart bot token
         id: app-token
         uses: actions/create-github-app-token@v3
@@ -51,8 +52,16 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
-          token: ${{ steps.app-token.outputs.token }}
-          persist-credentials: true
+          token: ${{ github.token }}
+          persist-credentials: false
+
+      - name: Checkout trusted automation
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          token: ${{ github.token }}
+          persist-credentials: false
+          path: .trusted-automation
 
       - name: Check for appVersion changes
         id: check-changes
@@ -128,12 +137,23 @@ jobs:
       - name: Install candidate validation dependencies
         run: |
           python -m venv .venv
-          .venv/bin/python -m pip install -r requirements-dev.txt
+          .venv/bin/python -m pip install -r .trusted-automation/requirements-dev.txt
 
       - name: Validate and publish candidate
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: .venv/bin/python .github/scripts/chart_pr_automation.py publish-bump
+          GH_TOKEN: ${{ github.token }}
+          CHART_BOT_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          header=$(printf 'x-access-token:%s' "$CHART_BOT_TOKEN" | base64 -w0)
+          unset CHART_BOT_TOKEN
+          git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ${header}"
+          unset header
+          cleanup() {
+            git config --local --unset-all http.https://github.com/.extraheader || true
+          }
+          trap cleanup EXIT
+          .venv/bin/python .trusted-automation/.github/scripts/chart_pr_automation.py publish-bump
 
   release:
     name: Release Charts

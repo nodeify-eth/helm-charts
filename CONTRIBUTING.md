@@ -54,12 +54,13 @@ Prerelease or build-metadata versions require a manual version increase when
 appVersion changes.
 
 After a bot bump, confirm the actual final commit SHA on the PR. The bump job
-checks out and pushes that commit with a GitHub App installation token
-(`CHART_BOT_APP_ID` and `CHART_BOT_PRIVATE_KEY`), not the default `GITHUB_TOKEN`.
-A `GITHUB_TOKEN` push does not start `pull_request` workflows, so `Validate
-Charts` would stay on the pre-bump SHA. Verify that `Validate Charts` runs on
-the exact final SHA and passes. A successful earlier run does not validate the
-bot commit. See GitHub's
+publishes that commit with a GitHub App installation token
+(`CHART_BOT_APP_ID` and `CHART_BOT_PRIVATE_KEY`). Checkout does not persist the
+token. Dependency installation and the publisher are the copies from the PR's
+base commit, and the token is applied only for the push. A `GITHUB_TOKEN` push
+does not start `pull_request` workflows, so `Validate Charts` would stay on the
+pre-bump SHA. Verify that `Validate Charts` runs on the exact final SHA and
+passes. A successful earlier run does not validate the bot commit. See GitHub's
 [workflow trigger rules](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).
 
 If no final-head run or approval banner appears, the branch author or maintainer
