@@ -53,13 +53,13 @@ preserved; an invalid or insufficient change still fails the version check.
 Prerelease or build-metadata versions require a manual version increase when
 appVersion changes.
 
-After a bot bump, confirm the actual final commit SHA on the PR. GitHub creates
-approval-required PR workflow runs for `opened`, `synchronize`, and `reopened`
-events caused by `GITHUB_TOKEN`; ordinary token-generated push runs remain
-suppressed. A maintainer with write access must review the final commit and
-workflow changes, then select **Approve workflows to run** on the PR. Verify that
-`Validate Charts` runs on that exact final SHA and passes. A successful earlier
-run does not validate the bot commit. See GitHub's
+After a bot bump, confirm the actual final commit SHA on the PR. The bump job
+checks out and pushes that commit with a GitHub App installation token
+(`CHART_BOT_APP_ID` and `CHART_BOT_PRIVATE_KEY`), not the default `GITHUB_TOKEN`.
+A `GITHUB_TOKEN` push does not start `pull_request` workflows, so `Validate
+Charts` would stay on the pre-bump SHA. Verify that `Validate Charts` runs on
+the exact final SHA and passes. A successful earlier run does not validate the
+bot commit. See GitHub's
 [workflow trigger rules](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).
 
 If no final-head run or approval banner appears, the branch author or maintainer

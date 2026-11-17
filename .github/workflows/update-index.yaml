@@ -35,12 +35,24 @@ jobs:
       HEAD_REF: ${{ github.head_ref }}
       EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
+      # A push authenticated as GITHUB_TOKEN does not start pull_request
+      # workflows, so Validate Charts would stay on the pre-bump SHA.
+      - name: Create chart bot token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.CHART_BOT_APP_ID }}
+          private-key: ${{ secrets.CHART_BOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: read
+
       - name: Checkout
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: true
 
       - name: Check for appVersion changes
         id: check-changes
@@ -120,7 +132,7 @@ jobs:
 
       - name: Validate and publish candidate
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: .venv/bin/python .github/scripts/chart_pr_automation.py publish-bump
 
   release:
