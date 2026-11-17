@@ -2,10 +2,11 @@ apiVersion: v2
 name: firehose-ethereum
 description: A Helm chart for Kubernetes
 type: application
-version: 1.7.4
+version: 1.7.5
 appVersion: geth-v1.16.9-fh3.0
 keywords:
   - firehose
   - substreams
 annotations:
   lookupName: "ghcr.io/streamingfast/go-ethereum"
+icon: https://avatars.githubusercontent.com/u/77980295?s=200&v=4
