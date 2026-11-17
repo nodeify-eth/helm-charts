@@ -896,6 +896,22 @@ entries:
       lookupName: ghcr.io/streamingfast/firehose-core
     apiVersion: v2
     appVersion: v1.21.2
+    created: "2026-11-17T20:54:32.711086621Z"
+    description: A Helm chart for Kubernetes
+    digest: 10f1e7134583b540e312e5495d95593476a517656ca06eb9aeea0bcabb7ede55
+    icon: https://avatars.githubusercontent.com/u/77980295?s=200&v=4
+    keywords:
+    - firehose
+    - substreams
+    name: firehose-core
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/firehose-core-1.2.14/firehose-core-1.2.14.tgz
+    version: 1.2.14
+  - annotations:
+      lookupName: ghcr.io/streamingfast/firehose-core
+    apiVersion: v2
+    appVersion: v1.21.2
     created: "2026-11-17T18:57:39.866736085Z"
     description: A Helm chart for Kubernetes
     digest: fd0f24976d69cc3c67a30b7a82a66d104f9137eaee50bafae6ef9f1e8bca1a28
@@ -1088,6 +1104,22 @@ entries:
     - https://github.com/nodeify-eth/helm-charts/releases/download/firehose-core-1.0.0/firehose-core-1.0.0.tgz
     version: 1.0.0
   firehose-ethereum:
+  - annotations:
+      lookupName: ghcr.io/streamingfast/go-ethereum
+    apiVersion: v2
+    appVersion: geth-v1.16.9-fh3.0
+    created: "2026-11-17T20:54:32.871419024Z"
+    description: A Helm chart for Kubernetes
+    digest: bbe69b80a9907e57a0d6d6e4abea92680b0f0d18fe7186d743f4565ab2cd0fff
+    icon: https://avatars.githubusercontent.com/u/77980295?s=200&v=4
+    keywords:
+    - firehose
+    - substreams
+    name: firehose-ethereum
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/firehose-ethereum-1.7.5/firehose-ethereum-1.7.5.tgz
+    version: 1.7.5
   - annotations:
       lookupName: ghcr.io/streamingfast/go-ethereum
     apiVersion: v2
@@ -1698,6 +1730,27 @@ entries:
   substreams-sink-noop:
   - apiVersion: v2
     appVersion: v1.17.1
+    created: "2026-11-17T20:54:33.092409493Z"
+    description: A Helm chart for Substreams Sink Noop
+    digest: e3557448d78e9569604e673460f87e0d74ed229717322db7a86848b6bd5cc484
+    home: https://nodeify.net
+    icon: https://avatars.githubusercontent.com/u/77980295?s=200&v=4
+    keywords:
+    - substreams
+    - noop
+    - substreams-sink
+    maintainers:
+    - email: vince@nodeify.net
+      name: vince
+    name: substreams-sink-noop
+    sources:
+    - https://github.com/streamingfast/substreams-sink-noop
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-sink-noop-2.4.1/substreams-sink-noop-2.4.1.tgz
+    version: 2.4.1
+  - apiVersion: v2
+    appVersion: v1.17.1
     created: "2025-11-10T22:08:37.782838867Z"
     description: A Helm chart for Substreams Sink Noop
     digest: 740bc67e177d160827faad519386cd751fcf22eca108fd396a56e37d4f63573e
@@ -1841,6 +1894,22 @@ entries:
       lookupName: ghcr.io/streamingfast/firehose-ethereum
     apiVersion: v2
     appVersion: v2.25.0
+    created: "2026-11-17T20:54:33.251682274Z"
+    description: A Helm chart for deploying substreams-tier-2
+    digest: 915e3b95a1157a657bcaa40ecc44d485e0b82364278f69b1a613aacc30304f84
+    icon: https://avatars.githubusercontent.com/u/77980295?s=200&v=4
+    keywords:
+    - substreams-tier-2
+    - firehose-ethereum
+    name: substreams-tier-2
+    type: application
+    urls:
+    - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-tier-2-1.1.9/substreams-tier-2-1.1.9.tgz
+    version: 1.1.9
+  - annotations:
+      lookupName: ghcr.io/streamingfast/firehose-ethereum
+    apiVersion: v2
+    appVersion: v2.25.0
     created: "2026-11-17T18:57:26.311598695Z"
     description: A Helm chart for deploying substreams-tier-2
     digest: 08c276e3a252d1acdd8df8bece500866734df40d5e7cfea0cd1a072264d2bd08
@@ -1972,4 +2041,4 @@ entries:
     urls:
     - https://github.com/nodeify-eth/helm-charts/releases/download/substreams-tier-2-1.0.0/substreams-tier-2-1.0.0.tgz
     version: 1.0.0
-generated: "2026-11-17T18:57:39.866869919Z"
+generated: "2026-11-17T20:54:33.252051755Z"
