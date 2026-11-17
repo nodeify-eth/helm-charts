@@ -263,8 +263,22 @@ os.execv({shutil.which('git')!r}, ['git', *sys.argv[1:]])
         self.assertIn("github.event.pull_request.user.login != 'dependabot[bot]'", job['if'])
         self.assertEqual(job['permissions'], {'contents': 'write', 'pull-requests': 'read'})
         self.assertEqual(job['steps'][0]['with']['ref'], '${{ github.event.pull_request.head.sha }}')
+        self.assertEqual(job['steps'][0]['with']['token'], '${{ secrets.GITHUB_TOKEN }}')
+        self.assertEqual(job['outputs']['head_sha'], '${{ steps.published.outputs.head_sha }}')
+        caller = workflow['jobs']['validate-bumped-head']
+        self.assertEqual(caller['needs'], 'bump-version')
+        self.assertIn("needs.bump-version.outputs.head_sha != ''", caller['if'])
+        self.assertEqual(caller['uses'], './.github/workflows/validate-charts.yaml')
+        self.assertEqual(caller['with']['head_sha'], '${{ needs.bump-version.outputs.head_sha }}')
+        self.assertEqual(caller['permissions'], {'contents': 'read', 'pull-requests': 'read'})
+        workflow_text = (ROOT / '.github/workflows/update-index.yaml').read_text()
+        self.assertNotIn('pull_request_target', workflow_text)
+        self.assertNotIn('CHART_BOT', workflow_text)
+        self.assertNotIn('create-github-app-token', workflow_text)
+        validate = yaml.safe_load((ROOT / '.github/workflows/validate-charts.yaml').read_text())
+        triggers = validate.get('on', validate.get(True))
+        self.assertIn('head_sha', triggers['workflow_call']['inputs'])
         self.assertFalse(job['concurrency']['cancel-in-progress'])
-        self.assertNotIn('pull_request_target', (ROOT / '.github/workflows/update-index.yaml').read_text())
 
 
 if __name__ == '__main__':

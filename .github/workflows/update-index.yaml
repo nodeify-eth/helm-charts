@@ -28,6 +28,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
+    outputs:
+      head_sha: ${{ steps.published.outputs.head_sha }}
     env:
       REPOSITORY: ${{ github.repository }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -123,6 +125,27 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: .venv/bin/python .github/scripts/chart_pr_automation.py publish-bump
 
+      # A GITHUB_TOKEN push does not start pull_request workflows, so this run
+      # validates the pushed head by calling Validate Charts.
+      - name: Record published head
+        id: published
+        run: |
+          final=$(git rev-parse HEAD)
+          if [ "$final" != "$EXPECTED_HEAD_SHA" ]; then
+            echo "head_sha=$final" >> "$GITHUB_OUTPUT"
+          fi
+
+  validate-bumped-head:
+    name: Validate Bumped Charts
+    needs: bump-version
+    if: needs.bump-version.outputs.head_sha != ''
+    uses: ./.github/workflows/validate-charts.yaml
+    with:
+      head_sha: ${{ needs.bump-version.outputs.head_sha }}
+    permissions:
+      contents: read
+      pull-requests: read
+
   release:
     name: Release Charts
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -144,7 +167,7 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v5
         with:
-          version: 'v4.3.1'
+          version: 'v4.3.2'
 
       - name: Add Helm repositories
         run: |
