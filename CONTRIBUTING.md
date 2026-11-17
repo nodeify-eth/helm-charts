@@ -56,7 +56,9 @@ appVersion changes.
 After a bot bump, confirm the actual final commit SHA on the PR. GitHub creates
 approval-required PR workflow runs for `opened`, `synchronize`, and `reopened`
 events caused by `GITHUB_TOKEN`; ordinary token-generated push runs remain
-suppressed. A maintainer with write access must review the final commit and
+suppressed.
+The bump workflow calls Validate Charts on that pushed head, so a bad bump fails that run.
+A maintainer with write access must review the final commit and
 workflow changes, then select **Approve workflows to run** on the PR. Verify that
 `Validate Charts` runs on that exact final SHA and passes. A successful earlier
 run does not validate the bot commit. See GitHub's
