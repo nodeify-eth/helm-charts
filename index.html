@@ -4,163 +4,264 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nodeify Helm Charts</title>
+    <meta name="description" content="Helm chart repository published by Nodeify.">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0a0a0a">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #fafafa;
+            --muted: #a3a3a3;
+            --line: rgba(255, 255, 255, 0.10);
+            --line-strong: rgba(255, 255, 255, 0.20);
+            --card: rgba(255, 255, 255, 0.03);
+            --well: #121212;
+            --button: #fafafa;
+            --button-text: #171717;
+            --radius: 16px;
+            --radius-sm: 8px;
+            color-scheme: dark;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html { background: var(--bg); }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
+            position: relative;
+            z-index: 0;
             margin: 0;
-            padding: 40px;
-            background: #000;
-            color: #fff;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            background: transparent;
+            color: var(--fg);
+            font-family: Inter, "Segoe UI", sans-serif;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
-        .container {
-            max-width: 800px;
-            width: 100%;
-            text-align: center;
+
+        ::selection { background: var(--fg); color: var(--button-text); }
+        :focus { outline: none; }
+        :focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+
+        .skip {
+            position: absolute;
+            left: 1rem;
+            top: 1rem;
+            z-index: 2;
+            transform: translateY(-150%);
+            background: var(--button);
+            color: var(--button-text);
+            font-weight: 500;
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 0.75rem;
         }
-        .logo {
-            max-width: 200px;
-            margin-bottom: 1em;
+        .skip:focus { transform: none; }
+
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #111827 0%, var(--bg) 42%, var(--bg) 100%);
         }
-        h1 {
-            font-size: 3em;
-            margin-bottom: 0.5em;
-            letter-spacing: -1px;
+        .grid {
+            position: absolute;
+            inset: 0;
+            opacity: 0.4;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 56px 56px;
+            -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+            mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
         }
-        .description {
-            font-size: 1.2em;
-            color: #888;
-            margin-bottom: 2em;
+        .orb { position: absolute; border-radius: 999px; filter: blur(96px); }
+        .orb-a { top: 10%; left: 15%; width: 520px; height: 520px; background: radial-gradient(circle, rgba(99, 102, 241, 0.28), transparent 70%); }
+        .orb-b { right: 15%; bottom: 5%; width: 460px; height: 460px; background: radial-gradient(circle, rgba(168, 85, 247, 0.24), transparent 70%); }
+        .orb-c { top: 30%; right: 30%; width: 360px; height: 360px; background: radial-gradient(circle, rgba(56, 189, 248, 0.22), transparent 70%); }
+
+        .wrap { width: min(48rem, calc(100% - 2.5rem)); margin-inline: auto; }
+        .hero { padding: 3.5rem 0 0; text-align: center; }
+        .logo-hero { height: 8.5rem; width: auto; animation: float 4.8s ease-in-out infinite alternate; }
+        @keyframes float { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+        main { padding: 3rem 0 4.5rem; }
+
+        .card {
+            min-width: 0;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 1.5rem;
         }
-        .code-container {
+        .code-wrap {
             position: relative;
-            margin: 2em 0;
+            min-width: 0;
+            background: var(--well);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
         }
         pre {
-            background: #111;
-            padding: 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            font-size: 1.1em;
-            text-align: left;
             margin: 0;
+            width: 100%;
+            min-width: 0;
+            padding: 3.75rem 1.25rem 1.25rem;
+            overflow-x: auto;
+            color: var(--fg);
+            font-family: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace;
+            font-size: 0.8125rem;
+            line-height: 1.7;
+            scrollbar-color: #3f3f46 transparent;
         }
-        code {
-            color: #fff;
-        }
+        code { font: inherit; color: inherit; }
+
         #copy-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #333;
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
+            top: 0.75rem;
+            right: 0.75rem;
+            appearance: none;
+            border: 0;
+            background: var(--button);
+            color: var(--button-text);
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1;
+            min-height: 2.25rem;
+            padding: 0 0.875rem;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 0.9em;
-            transition: background 0.3s;
         }
-        #copy-btn:hover {
-            background: #444;
-        }
-        .charts {
-            margin: 3em 0;
-            padding: 2em;
-            background: #111;
-            border-radius: 8px;
-            text-align: left;
-        }
+        #copy-btn:hover { background: #e4e4e7; }
+        #copy-btn:active { background: #d4d4d4; }
+
+        .charts { margin-top: 4.5rem; }
         .charts h2 {
-            margin-top: 0;
-            color: #fff;
+            margin: 0 0 1.75rem;
             text-align: center;
+            font-size: clamp(1.875rem, 1.35rem + 1.6vw, 2.25rem);
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            line-height: 1.15;
+            text-wrap: balance;
         }
-        .chart-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1em;
+        .chart-list { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        .chart h3 { margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.3; }
+        .chart p { margin: 0.5rem 0 0; color: var(--muted); font-size: 0.875rem; line-height: 1.5; }
+        .chart { transition: border-color 180ms ease; }
+        @media (hover: hover) { .chart:hover { border-color: var(--line-strong); } }
+
+        footer { border-top: 1px solid #1f2937; padding: 2rem 0; }
+        .footer-inner { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; text-align: center; }
+        .footer-brand { display: flex; align-items: center; gap: 0.75rem; }
+        .logo-footer { height: 2.5rem; width: auto; }
+        footer p { margin: 0; color: var(--muted); font-size: 0.75rem; line-height: 1.25rem; }
+        footer a { color: var(--muted); text-underline-offset: 0.18em; }
+        footer a:hover { color: var(--fg); }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
-        .chart-item {
-            margin: 0;
-            padding: 1em;
-            border: 1px solid #333;
-            border-radius: 4px;
-            transition: transform 0.2s, box-shadow 0.2s;
+
+        @media (min-width: 640px) {
+            .wrap { width: min(48rem, calc(100% - 3rem)); }
+            .hero { padding-top: 5rem; }
+            .logo-hero { height: 10rem; }
+            main { padding-top: 3.5rem; }
+            pre { font-size: 0.875rem; }
+            .chart-list { grid-template-columns: 1fr 1fr; }
+            .footer-inner { flex-direction: row; justify-content: space-between; text-align: left; }
         }
-        .chart-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(255,255,255,0.1);
+
+        @media (prefers-reduced-motion: reduce) {
+            .logo-hero { animation: none; }
+            .chart { transition: none; }
         }
-        .chart-name {
-            font-weight: bold;
-            color: #fff;
-        }
-        .chart-description {
-            color: #888;
-            margin-top: 0.5em;
-        }
-        footer {
-            margin-top: 3em;
-            color: #666;
-            font-size: 0.9em;
-        }
-        footer a {
-            color: #666;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        footer a:hover {
-            color: #888;
+        @media (prefers-reduced-transparency: reduce) { .orb { display: none; } }
+        @media (forced-colors: active) {
+            .backdrop { display: none; }
+            .card, .code-wrap, #copy-btn { border: 1px solid CanvasText; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <img src="https://pbs.twimg.com/profile_images/1478865153697349632/cvQHnKE5_400x400.png" alt="Nodeify Logo" class="logo">
-        
-        <div class="code-container">
-            <pre><code>helm repo add nodeify https://nodeify-eth.github.io/helm-charts
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="backdrop" aria-hidden="true">
+        <div class="grid"></div>
+        <div class="orb orb-a"></div>
+        <div class="orb orb-b"></div>
+        <div class="orb orb-c"></div>
+    </div>
+
+    <header class="hero">
+        <div class="wrap">
+            <img class="logo-hero" src="assets/nodeify-logo.svg" width="228" height="210" alt="Nodeify">
+        </div>
+    </header>
+
+    <main id="main">
+        <div class="wrap">
+            <h1 class="sr-only">Nodeify Helm Charts</h1>
+            <section aria-label="Helm repository commands">
+                <div class="code-wrap">
+                    <button type="button" id="copy-btn">Copy</button>
+                    <pre tabindex="0"><code id="install-commands">helm repo add nodeify https://nodeify-eth.github.io/helm-charts
 helm repo update
 helm install indexer-tools nodeify/indexer-tools
 helm install cosmoshub nodeify/cosmos-node</code></pre>
-            <button id="copy-btn" onclick="copyToClipboard()">Copy</button>
+                </div>
+            </section>
+            <section class="charts" aria-labelledby="charts-heading">
+                <h2 id="charts-heading">Available Charts</h2>
+                <div class="chart-list">
+                    <article class="card chart">
+                        <h3>indexer-tools</h3>
+                        <p>Toolset for blockchain data indexing and management</p>
+                    </article>
+                    <article class="card chart">
+                        <h3>cosmos-node</h3>
+                        <p>Blockchain Node</p>
+                    </article>
+                </div>
+            </section>
         </div>
-        
-        <div class="charts">
-            <h2>Available Charts</h2>
-            <div class="chart-list">
-                <div class="chart-item">
-                    <div class="chart-name">indexer-tools</div>
-                    <div class="chart-description">Toolset for blockchain data indexing and management</div>
-                </div>
-                <div class="chart-item">
-                    <div class="chart-name">cosmos-node</div>
-                    <div class="chart-description">Blockchain Node</div>
-                </div>
+    </main>
+
+    <footer>
+        <div class="wrap footer-inner">
+            <div class="footer-brand">
+                <img class="logo-footer" src="assets/nodeify-logo.svg" width="228" height="210" alt="">
+                <p>Maintained by Nodeify</p>
             </div>
+            <p><a href="https://github.com/nodeify-eth/helm-charts">GitHub Repository</a></p>
         </div>
-        
-        <footer>
-            <p>Maintained by Nodeify | <a href="https://github.com/nodeify-eth/helm-charts">GitHub Repository</a></p>
-        </footer>
-    </div>
+    </footer>
+
     <script>
-        function copyToClipboard() {
-            const code = document.querySelector('pre code').innerText;
-            navigator.clipboard.writeText(code).then(() => {
-                const btn = document.getElementById('copy-btn');
-                btn.innerText = 'Copied!';
-                setTimeout(() => btn.innerText = 'Copy', 2000);
-            }).catch(err => {
-                console.error('Failed to copy: ', err);
+        document.getElementById("copy-btn").addEventListener("click", function () {
+            var button = this;
+            var text = document.getElementById("install-commands").textContent.replace(/\s+$/, "");
+            navigator.clipboard.writeText(text).then(function () {
+                button.textContent = "Copied";
+                window.setTimeout(function () { button.textContent = "Copy"; }, 2000);
             });
-        }
+        });
     </script>
 </body>
 </html>
