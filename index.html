@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nodeify Helm Charts</title>
+    <meta name="description" content="Helm chart repository published by Nodeify.">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0a0a0a">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <style>
+        @font-face {
+            font-family: Inter;
+            font-style: normal;
+            font-weight: 100 900;
+            font-display: swap;
+            src: url("assets/fonts/inter-latin.woff2") format("woff2");
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+
+        :root {
+            --bg: #0a0a0a;
+            --fg: #fafafa;
+            --muted: #a3a3a3;
+            --line: rgba(255, 255, 255, 0.10);
+            --line-strong: rgba(255, 255, 255, 0.20);
+            --card: rgba(255, 255, 255, 0.03);
+            --well: #121212;
+            --button: #fafafa;
+            --button-text: #171717;
+            --button-hover: #e4e4e7;
+            --footer-line: #1f2937;
+            --radius: 16px;
+            --radius-sm: 8px;
+            --measure: 48rem;
+            color-scheme: dark;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html {
+            background: var(--bg);
+        }
+
+        body {
+            position: relative;
+            z-index: 0;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: transparent;
+            color: var(--fg);
+            font-family: Inter, "Segoe UI", sans-serif;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        ::selection {
+            background: #fafafa;
+            color: #171717;
+        }
+
+        :focus {
+            outline: none;
+        }
+
+        :focus-visible {
+            outline: 2px solid #fafafa;
+            outline-offset: 3px;
+        }
+
+        .skip {
+            position: absolute;
+            left: 1rem;
+            top: 1rem;
+            z-index: 2;
+            transform: translateY(-150%);
+            background: var(--button);
+            color: var(--button-text);
+            font-weight: 500;
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 0.75rem;
+        }
+
+        .skip:focus {
+            transform: none;
+        }
+
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background: linear-gradient(to bottom, #111827 0%, var(--bg) 42%, var(--bg) 100%);
+            overflow: hidden;
+        }
+
+        .grid {
+            position: absolute;
+            inset: 0;
+            opacity: 0.4;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 56px 56px;
+            -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+            mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 999px;
+            filter: blur(96px);
+        }
+
+        .orb-a {
+            top: 10%;
+            left: 15%;
+            width: 520px;
+            height: 520px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.28) 0%, rgba(99, 102, 241, 0) 70%);
+        }
+
+        .orb-b {
+            right: 15%;
+            bottom: 5%;
+            width: 460px;
+            height: 460px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.24) 0%, rgba(168, 85, 247, 0) 70%);
+        }
+
+        .orb-c {
+            top: 30%;
+            right: 30%;
+            width: 360px;
+            height: 360px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, rgba(56, 189, 248, 0) 70%);
+        }
+
+        .wrap {
+            width: min(var(--measure), calc(100% - 2.5rem));
+            margin-inline: auto;
+        }
+
+        .hero {
+            padding: 3.5rem 0 0;
+            text-align: center;
+        }
+
+        .logo-hero {
+            height: 8.5rem;
+            width: auto;
+            animation: float 4.8s ease-in-out infinite alternate;
+        }
+
+        @keyframes float {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
+        }
+
+        main {
+            padding: 3rem 0 4.5rem;
+        }
+
+        .card {
+            min-width: 0;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+        }
+
+        .code-wrap {
+            position: relative;
+            min-width: 0;
+            background: var(--well);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+        }
+
+        pre {
+            margin: 0;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            padding: 3.75rem 1.25rem 1.25rem;
+            overflow-x: auto;
+            background: transparent;
+            border: 0;
+            color: var(--fg);
+            font-family: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace;
+            font-size: 0.8125rem;
+            line-height: 1.7;
+            scrollbar-color: #3f3f46 transparent;
+        }
+
+        code {
+            font: inherit;
+            color: inherit;
+        }
+
+        #copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            appearance: none;
+            border: 0;
+            background: var(--button);
+            color: var(--button-text);
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1;
+            min-height: 2.25rem;
+            padding: 0 0.875rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+
+        #copy-btn:hover {
+            background: var(--button-hover);
+        }
+
+        #copy-btn:active {
+            background: #d4d4d4;
+        }
+
+        .charts {
+            margin-top: 4.5rem;
+        }
+
+        .charts h2 {
+            margin: 0 0 1.75rem;
+            text-align: center;
+            font-size: clamp(1.875rem, 1.35rem + 1.6vw, 2.25rem);
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            line-height: 1.15;
+            text-wrap: balance;
+        }
+
+        .chart-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .chart h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+        }
+
+        .chart p {
+            margin: 0.5rem 0 0;
+            color: var(--muted);
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .chart {
+            transition: border-color 180ms ease;
+        }
+
+        @media (hover: hover) {
+            .chart:hover {
+                border-color: var(--line-strong);
+            }
+        }
+
+        footer {
+            border-top: 1px solid var(--footer-line);
+            padding: 2rem 0;
+        }
+
+        .footer-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.25rem;
+            text-align: center;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-footer {
+            height: 2.5rem;
+            width: auto;
+        }
+
+        footer p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.75rem;
+            line-height: 1.25rem;
+        }
+
+        footer a {
+            color: var(--muted);
+            text-underline-offset: 0.18em;
+        }
+
+        footer a:hover {
+            color: var(--fg);
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        @media (min-width: 640px) {
+            .wrap {
+                width: min(var(--measure), calc(100% - 3rem));
+            }
+
+            .hero {
+                padding-top: 5rem;
+            }
+
+            .logo-hero {
+                height: 10rem;
+            }
+
+            main {
+                padding-top: 3.5rem;
+            }
+
+            pre {
+                font-size: 0.875rem;
+            }
+
+            .chart-list {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .footer-inner {
+                flex-direction: row;
+                justify-content: space-between;
+                text-align: left;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .logo-hero {
+                animation: none;
+            }
+
+            .chart {
+                transition: none;
+            }
+        }
+
+        @media (prefers-reduced-transparency: reduce) {
+            .orb {
+                display: none;
+            }
+        }
+
+        @media (forced-colors: active) {
+            .backdrop {
+                display: none;
+            }
+
+            .card,
+            .code-wrap,
+            #copy-btn {
+                border: 1px solid CanvasText;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="backdrop" aria-hidden="true">
+        <div class="grid"></div>
+        <div class="orb orb-a"></div>
+        <div class="orb orb-b"></div>
+        <div class="orb orb-c"></div>
+    </div>
+
+    <header class="hero">
+        <div class="wrap">
+            <img class="logo-hero" src="assets/nodeify-logo.svg" width="228" height="210" alt="Nodeify" fetchpriority="high">
+        </div>
+    </header>
+
+    <main id="main">
+        <div class="wrap">
+            <h1 class="sr-only">Nodeify Helm Charts</h1>
+
+            <section class="install" aria-label="Helm repository commands">
+                <h2 class="sr-only">Install</h2>
+                <div class="code-wrap">
+                    <button type="button" id="copy-btn">Copy</button>
+                    <pre tabindex="0"><code id="install-commands">helm repo add nodeify https://nodeify-eth.github.io/helm-charts
+helm repo update
+helm install indexer-tools nodeify/indexer-tools
+helm install cosmoshub nodeify/cosmos-node</code></pre>
+                </div>
+                <p id="copy-status" class="sr-only" role="status" aria-live="polite"></p>
+            </section>
+
+            <section class="charts" aria-labelledby="charts-heading">
+                <h2 id="charts-heading">Available Charts</h2>
+                <div class="chart-list">
+                    <article class="card chart">
+                        <h3>indexer-tools</h3>
+                        <p>Toolset for blockchain data indexing and management</p>
+                    </article>
+                    <article class="card chart">
+                        <h3>cosmos-node</h3>
+                        <p>Blockchain Node</p>
+                    </article>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="wrap footer-inner">
+            <div class="footer-brand">
+                <img class="logo-footer" src="assets/nodeify-logo.svg" width="228" height="210" alt="">
+                <p>Maintained by Nodeify</p>
+            </div>
+            <p><a href="https://github.com/nodeify-eth/helm-charts">GitHub Repository</a></p>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            var button = document.getElementById("copy-btn");
+            var status = document.getElementById("copy-status");
+            var code = document.getElementById("install-commands");
+            var timer = 0;
+
+            if (!button || !status || !code) {
+                return;
+            }
+
+            button.addEventListener("click", function () {
+                var text = code.textContent.replace(/\s+$/, "");
+
+                function done() {
+                    button.textContent = "Copied";
+                    status.textContent = "Commands copied to clipboard.";
+                    window.clearTimeout(timer);
+                    timer = window.setTimeout(function () {
+                        button.textContent = "Copy";
+                        status.textContent = "";
+                    }, 2000);
+                }
+
+                function failed() {
+                    button.textContent = "Copy";
+                    status.textContent = "Copy failed. Select the commands and copy them manually.";
+                }
+
+                function fallback() {
+                    var area = document.createElement("textarea");
+                    area.value = text;
+                    area.setAttribute("readonly", "");
+                    area.style.position = "fixed";
+                    area.style.top = "0";
+                    area.style.left = "0";
+                    area.style.opacity = "0";
+                    document.body.appendChild(area);
+                    area.focus();
+                    area.select();
+                    var ok = false;
+                    try {
+                        ok = document.execCommand("copy");
+                    } catch (error) {
+                        ok = false;
+                    }
+                    document.body.removeChild(area);
+                    button.focus();
+                    return ok;
+                }
+
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text).then(done, function () {
+                        if (fallback()) {
+                            done();
+                        } else {
+                            failed();
+                        }
+                    });
+                    return;
+                }
+
+                if (fallback()) {
+                    done();
+                } else {
+                    failed();
+                }
+            });
+        }());
+    </script>
+</body>
+</html>

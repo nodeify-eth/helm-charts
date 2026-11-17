@@ -1,0 +1,39 @@
+name: Publish landing page
+
+# GitHub Pages for this repo is the gh-pages branch root, which also holds
+# the Helm index.yaml. chart-releaser updates that index in its own worktree
+# and commits index.yaml only, so a release does not regenerate index.html.
+# This workflow is what puts the page sourced on main onto gh-pages.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'index.html'
+      - 'assets/**'
+      - '.github/scripts/publish-landing-page.sh'
+      - '.github/workflows/publish-landing-page.yaml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-landing-page
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish landing page
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy landing page onto gh-pages
+        env:
+          GIT_TERMINAL_PROMPT: "0"
+        run: bash .github/scripts/publish-landing-page.sh
