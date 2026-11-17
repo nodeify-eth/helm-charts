@@ -107,10 +107,9 @@ os.execv({shutil.which('git')!r}, ['git', *sys.argv[1:]])
 
     def run_bump_shell(self, success=True):
         workflow = yaml.safe_load((ROOT / '.github/workflows/update-index.yaml').read_text())
-        steps = {step['name']: step for step in workflow['jobs']['bump-version']['steps']}
+        steps = workflow['jobs']['bump-version']['steps']
         output = self.work / 'output'
-        result = subprocess.run(['bash', '-e', '-c', steps['Check for appVersion changes']['run']],
-                                cwd=self.repo,
+        result = subprocess.run(['bash', '-e', '-c', steps[1]['run']], cwd=self.repo,
                                 env={**os.environ, 'BASE_REF': 'main', 'GITHUB_OUTPUT': str(output)},
                                 text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -118,7 +117,7 @@ os.execv({shutil.which('git')!r}, ['git', *sys.argv[1:]])
             return
         lines = output.read_text().splitlines()
         changed = '\n'.join(lines[1:-1])
-        result = subprocess.run(['bash', '-e', '-c', steps['Bump chart versions']['run']], cwd=self.repo,
+        result = subprocess.run(['bash', '-e', '-c', steps[2]['run']], cwd=self.repo,
                                 env={**os.environ, 'BASE_REF': 'main', 'CHANGED_CHARTS': changed},
                                 text=True, capture_output=True)
         self.assertEqual(result.returncode, 0 if success else 1, result.stdout + result.stderr)
@@ -262,39 +261,24 @@ os.execv({shutil.which('git')!r}, ['git', *sys.argv[1:]])
         self.assertIn('head.repo.full_name == github.repository', job['if'])
         self.assertIn("github.actor != 'dependabot[bot]'", job['if'])
         self.assertIn("github.event.pull_request.user.login != 'dependabot[bot]'", job['if'])
-        self.assertEqual(job['permissions'], {'contents': 'read', 'pull-requests': 'read'})
-        checkouts = [step for step in job['steps']
-                     if str(step.get('uses', '')).startswith('actions/checkout@')]
-        self.assertEqual(len(checkouts), 2)
-        head, trusted = checkouts
-        self.assertEqual(head['with']['ref'], '${{ github.event.pull_request.head.sha }}')
-        self.assertEqual(head['with']['token'], '${{ github.token }}')
-        self.assertFalse(head['with']['persist-credentials'])
-        self.assertEqual(trusted['with']['ref'], '${{ github.event.pull_request.base.sha }}')
-        self.assertEqual(trusted['with']['path'], '.trusted-automation')
-        self.assertEqual(trusted['with']['token'], '${{ github.token }}')
-        self.assertFalse(trusted['with']['persist-credentials'])
-        token = next(step for step in job['steps'] if step.get('id') == 'app-token')
-        self.assertTrue(str(token['uses']).startswith('actions/create-github-app-token@'))
-        self.assertEqual(token['with']['app-id'], '${{ secrets.CHART_BOT_APP_ID }}')
-        self.assertEqual(token['with']['private-key'], '${{ secrets.CHART_BOT_PRIVATE_KEY }}')
-        self.assertEqual(token['with']['permission-contents'], 'write')
-        install = next(step for step in job['steps']
-                       if step.get('name') == 'Install candidate validation dependencies')
-        self.assertIn('.trusted-automation/requirements-dev.txt', install['run'])
-        self.assertNotIn('-r requirements-dev.txt', install['run'])
-        publish = next(step for step in job['steps']
-                       if step.get('name') == 'Validate and publish candidate')
-        self.assertEqual(publish['env']['GH_TOKEN'], '${{ github.token }}')
-        self.assertEqual(publish['env']['CHART_BOT_TOKEN'], '${{ steps.app-token.outputs.token }}')
-        self.assertIn('unset CHART_BOT_TOKEN', publish['run'])
-        self.assertIn('.trusted-automation/.github/scripts/chart_pr_automation.py', publish['run'])
-        self.assertNotIn('.venv/bin/python .github/scripts/', publish['run'])
-        self.assertFalse(job['concurrency']['cancel-in-progress'])
+        self.assertEqual(job['permissions'], {'contents': 'write', 'pull-requests': 'read'})
+        self.assertEqual(job['steps'][0]['with']['ref'], '${{ github.event.pull_request.head.sha }}')
+        self.assertEqual(job['steps'][0]['with']['token'], '${{ secrets.GITHUB_TOKEN }}')
+        self.assertEqual(job['outputs']['head_sha'], '${{ steps.published.outputs.head_sha }}')
+        caller = workflow['jobs']['validate-bumped-head']
+        self.assertEqual(caller['needs'], 'bump-version')
+        self.assertIn("needs.bump-version.outputs.head_sha != ''", caller['if'])
+        self.assertEqual(caller['uses'], './.github/workflows/validate-charts.yaml')
+        self.assertEqual(caller['with']['head_sha'], '${{ needs.bump-version.outputs.head_sha }}')
+        self.assertEqual(caller['permissions'], {'contents': 'read', 'pull-requests': 'read'})
         workflow_text = (ROOT / '.github/workflows/update-index.yaml').read_text()
         self.assertNotIn('pull_request_target', workflow_text)
-        bump_token = workflow_text.split('jobs:', 1)[1].split('release:', 1)[0]
-        self.assertNotIn('secrets.GITHUB_TOKEN', bump_token)
+        self.assertNotIn('CHART_BOT', workflow_text)
+        self.assertNotIn('create-github-app-token', workflow_text)
+        validate = yaml.safe_load((ROOT / '.github/workflows/validate-charts.yaml').read_text())
+        triggers = validate.get('on', validate.get(True))
+        self.assertIn('head_sha', triggers['workflow_call']['inputs'])
+        self.assertFalse(job['concurrency']['cancel-in-progress'])
 
 
 if __name__ == '__main__':

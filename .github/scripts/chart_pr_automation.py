@@ -101,7 +101,7 @@ def publish_bump(values):
         run('git', 'push', 'origin', f"HEAD:refs/heads/{values['HEAD_REF']}")
         check_remote(values, base, final)
     print(f'Final PR head: {final}. Version policy passed; full final-head validation is still required. '
-          'This push uses the chart bot token so Validate Charts runs on this SHA. '
+          'On the PR page approve workflows for this exact SHA, then require Validate Charts to pass. '
           'If no run appears, follow the documented human empty-commit recovery. '
           'Rerunning an older event does not validate this head.')
 
