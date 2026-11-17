@@ -6,6 +6,13 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      head_sha:
+        description: Commit to validate. Empty uses the triggering pull request head.
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -25,14 +32,14 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       BASE_REF: ${{ github.base_ref }}
       HEAD_REF: ${{ github.head_ref }}
-      EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      EXPECTED_HEAD_SHA: ${{ inputs.head_sha || github.event.pull_request.head.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
           persist-credentials: false
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ inputs.head_sha || github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -55,7 +62,7 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_SHA: ${{ inputs.head_sha || github.event.pull_request.head.sha }}
         run: |
           git fetch --no-tags origin "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF"
           .venv/bin/python .github/scripts/check_chart_versions.py \
