@@ -154,8 +154,13 @@
             text-wrap: balance;
         }
         .chart-list { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        .chart-head { display: flex; align-items: center; gap: 0.75rem; }
+        .chart-icon { width: 2.5rem; height: 2.5rem; flex: none; object-fit: contain; border-radius: 999px; background: rgba(255, 255, 255, 0.06); }
         .chart h3 { margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.3; }
+        .chart-meta { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.75rem; line-height: 1.4; }
         .chart p { margin: 0.5rem 0 0; color: var(--muted); font-size: 0.875rem; line-height: 1.5; }
+        .chart-fallback { margin: 0; color: var(--muted); }
+        .chart-fallback a { color: var(--fg); }
         .chart { transition: border-color 180ms ease; }
         @media (hover: hover) { .chart:hover { border-color: var(--line-strong); } }
 
@@ -223,21 +228,13 @@
                     <button type="button" id="copy-btn">Copy</button>
                     <pre tabindex="0"><code id="install-commands">helm repo add nodeify https://nodeify-eth.github.io/helm-charts
 helm repo update
-helm install indexer-tools nodeify/indexer-tools
-helm install cosmoshub nodeify/cosmos-node</code></pre>
+helm install my-release nodeify/CHART</code></pre>
                 </div>
             </section>
             <section class="charts" aria-labelledby="charts-heading">
                 <h2 id="charts-heading">Available Charts</h2>
-                <div class="chart-list">
-                    <article class="card chart">
-                        <h3>indexer-tools</h3>
-                        <p>Toolset for blockchain data indexing and management</p>
-                    </article>
-                    <article class="card chart">
-                        <h3>cosmos-node</h3>
-                        <p>Blockchain Node</p>
-                    </article>
+                <div class="chart-list" id="chart-list">
+                    <p class="chart-fallback">Loading charts…</p>
                 </div>
             </section>
         </div>
@@ -253,6 +250,7 @@ helm install cosmoshub nodeify/cosmos-node</code></pre>
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js" integrity="sha384-+pxiN6T7yvpryuJmE1gM9PX7yQit15auDb+ZwwvJOd/4be2Cie5/IuVXgQb/S9du" crossorigin="anonymous"></script>
     <script>
         document.getElementById("copy-btn").addEventListener("click", function () {
             var button = this;
@@ -262,6 +260,78 @@ helm install cosmoshub nodeify/cosmos-node</code></pre>
                 window.setTimeout(function () { button.textContent = "Copy"; }, 2000);
             });
         });
+
+        var chartList = document.getElementById("chart-list");
+        var installCommands = document.getElementById("install-commands");
+        var repoLines = "helm repo add nodeify https://nodeify-eth.github.io/helm-charts\nhelm repo update";
+
+        function showChartFallback() {
+            chartList.replaceChildren();
+            var note = document.createElement("p");
+            note.className = "chart-fallback";
+            note.append("Couldn't load the chart list. See ");
+            var link = document.createElement("a");
+            link.href = "index.yaml";
+            link.textContent = "index.yaml";
+            note.append(link, ".");
+            chartList.appendChild(note);
+        }
+
+        function iconUrl(value) {
+            return typeof value === "string" && /^(https?:\/\/|\/|\.\/)/.test(value) ? value : "";
+        }
+
+        fetch("index.yaml").then(function (response) {
+            if (!response.ok) throw new Error("index");
+            return response.text();
+        }).then(function (raw) {
+            var doc = window.jsyaml.load(raw);
+            var entries = doc && doc.entries;
+            if (!entries || typeof entries !== "object") throw new Error("entries");
+            var charts = Object.keys(entries).map(function (key) {
+                var versions = entries[key];
+                var latest = Array.isArray(versions) ? versions[0] : versions;
+                latest = latest || {};
+                latest.name = latest.name || key;
+                return latest;
+            }).sort(function (a, b) {
+                return String(a.name).localeCompare(String(b.name));
+            });
+
+            var lines = [repoLines];
+            chartList.replaceChildren();
+            charts.forEach(function (chart) {
+                var article = document.createElement("article");
+                article.className = "card chart";
+                var heading = document.createElement("h3");
+                heading.textContent = chart.name;
+                var icon = iconUrl(chart.icon);
+                if (icon) {
+                    var head = document.createElement("div");
+                    head.className = "chart-head";
+                    var image = document.createElement("img");
+                    image.className = "chart-icon";
+                    image.alt = "";
+                    image.src = icon;
+                    image.width = 40;
+                    image.height = 40;
+                    head.append(image, heading);
+                    article.appendChild(head);
+                } else {
+                    article.appendChild(heading);
+                }
+                var meta = document.createElement("p");
+                meta.className = "chart-meta";
+                meta.textContent = [chart.version, chart.appVersion ? "app " + chart.appVersion : ""]
+                    .filter(Boolean).join(" · ");
+                var description = document.createElement("p");
+                description.textContent = String(chart.description || "").replace(/\s+/g, " ").trim();
+                article.append(meta, description);
+                chartList.appendChild(article);
+                lines.push("helm install " + chart.name + " nodeify/" + chart.name);
+            });
+            installCommands.textContent = lines.join("\n");
+        }).catch(showChartFallback);
     </script>
 </body>
 </html>
