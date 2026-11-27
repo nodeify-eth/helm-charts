@@ -64,8 +64,10 @@ data:
         
         local max_retries=3
         local retry=0
+        local valid
         
         while [ $retry -lt $max_retries ]; do
+            valid=false
             if wget -q --timeout=300 --tries=3 -O "$downloaded_genesis.tmp" "$GENESIS_URL"; then
                 local file_size
                 file_size=$(stat -c%s "$downloaded_genesis.tmp" 2>/dev/null || echo "0")
@@ -73,20 +75,21 @@ data:
                 if [ "$file_size" -gt 10000000 ]; then
                     if head -c 1 "$downloaded_genesis.tmp" | grep -q '{'; then
                         log "Large genesis file downloaded successfully" "$GREEN"
+                        valid=true
                     else
                         log "Downloaded file doesn't appear to be JSON, retrying..." "$YELLOW"
                         rm -f "$downloaded_genesis.tmp"
-                        continue
                     fi
                 else
                     if jq empty "$downloaded_genesis.tmp" 2>/dev/null; then
                         log "Genesis file downloaded and validated successfully" "$GREEN"
+                        valid=true
                     else
                         log "Downloaded genesis file is not valid JSON, retrying..." "$YELLOW"
                         rm -f "$downloaded_genesis.tmp"
-                        continue
                     fi
                 fi
+                if [ "$valid" = true ]; then
                 {{- if .Values.bootstrap.genesis.checksum }}
                 # Verify checksum if provided
                 if echo "{{ .Values.bootstrap.genesis.checksum }}  $downloaded_genesis.tmp" | sha256sum -c -; then
@@ -98,6 +101,7 @@ data:
                 {{- end }}
                 mv "$downloaded_genesis.tmp" "$downloaded_genesis"
                 return 0
+                fi
             else
                 log "Failed to download genesis (attempt $((retry+1))/$max_retries)" "$YELLOW"
             fi

@@ -104,6 +104,20 @@ class CosmosGenesisRetryTest(unittest.TestCase):
         self.assertEqual(self.final.read_bytes(), PREVIOUS)
         self.assertFalse(self.calls.exists())
 
+    def test_invalid_json_stops_after_three_attempts(self):
+        self.fixture.write_bytes(b'<html>not json</html>\n')
+        sleep = self.work / 'bin' / 'sleep'
+        sleep.write_text('#!/bin/sh\nexit 0\n')
+        sleep.chmod(0o755)
+        result = self.run_download('')
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('not valid JSON', result.stdout)
+        self.assertIn('Failed to download genesis file after 3 attempts', result.stdout)
+        self.assertEqual(self.calls.read_text().splitlines(), ['download'] * 3)
+        self.assertFalse(self.downloaded.exists())
+        self.assertFalse((self.config / 'genesis.json.downloaded.tmp').exists())
+        self.assertEqual(self.final.read_bytes(), PREVIOUS)
+
     def test_no_checksum_preserves_download_and_cached_retry(self):
         first = self.run_download('')
         second = self.run_download('')
